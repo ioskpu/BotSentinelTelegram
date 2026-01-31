@@ -1,0 +1,18 @@
+app: crypto-sentinel-bot
+
+jobs:
+  - name: daily-maintenance
+    schedule: "0 2 * * *"  # 2 AM UTC
+    config:
+      image: registry.fly.io/crypto-sentinel-bot:latest
+      env:
+        MONGODB_URI: "{{.Secrets.MONGODB_URI}}"
+      cmd: ["python", "scripts/maintenance.py"]
+  
+  - name: hourly-price-update
+    schedule: "0 * * * *"  # Cada hora
+    config:
+      image: registry.fly.io/crypto-sentinel-bot:latest
+      env:
+        MONGODB_URI: "{{.Secrets.MONGODB_URI}}"
+      cmd: ["python", "-c", "from scripts.maintenance import update_price_history; import asyncio; asyncio.run(update_price_history())"]

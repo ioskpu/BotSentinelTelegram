@@ -36,6 +36,8 @@ class CryptoTelegramBot:
         self.application.add_handler(CommandHandler("myalerts", self.handlers.myalerts_command))
         self.application.add_handler(CommandHandler("deletealert", self.handlers.deletealert_command))
         self.application.add_handler(CommandHandler("stats", self.handlers.stats_command))
+        self.application.add_handler(CommandHandler("check", self.handlers.check_command))
+        self.application.add_handler(CommandHandler("testalert", self.handlers.test_alert_command))
         
         # Callback queries (botones)
         self.application.add_handler(CallbackQueryHandler(self.handlers.callback_query_handler))
@@ -75,16 +77,24 @@ class CryptoTelegramBot:
         except Exception as e:
             logger.error(f"Error stopping bot: {e}")
 
-    async def send_message(self, chat_id: int, text: str, parse_mode: str = 'Markdown'):
-        """Envía un mensaje a un usuario específico"""
+    def get_bot(self):
+        """Obtener la instancia del bot para usar en otros servicios"""
+        if self.application and self.application.bot:
+            return self.application.bot
+        return None
+
+    async def send_message_to_user(self, telegram_id: int, message: str, parse_mode: str = "Markdown"):
+        """Enviar mensaje a un usuario específico"""
         try:
-            if self.application and self.application.bot:
-                await self.application.bot.send_message(
-                    chat_id=chat_id,
-                    text=text,
+            bot = self.get_bot()
+            if bot:
+                await bot.send_message(
+                    chat_id=telegram_id,
+                    text=message,
                     parse_mode=parse_mode
                 )
                 return True
+            return False
         except Exception as e:
-            logger.error(f"Error enviando mensaje a {chat_id}: {e}")
-        return False
+            logger.error(f"Error sending message to user {telegram_id}: {e}")
+            return False

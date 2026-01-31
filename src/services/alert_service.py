@@ -1,19 +1,23 @@
 import asyncio
 from datetime import datetime, timedelta
-from typing import Dict, List
+from typing import Dict, List, Optional
 from loguru import logger
+from bson import ObjectId
+from telegram import Bot
+from telegram.error import TelegramError
 from src.database.mongodb import mongodb
 from src.services.price_monitor import PriceMonitor
 from src.config.settings import settings
 
 class AlertService:
-    def __init__(self, bot=None):
+    def __init__(self, bot: Optional[Bot] = None):
         self.price_monitor = PriceMonitor()
         self.last_prices: Dict[str, float] = {}
         self.is_running = False
         self.bot = bot
+        self.alert_cooldown: Dict[str, datetime] = {}
     
-    def set_bot(self, bot):
+    def set_bot(self, bot: Bot):
         """Asigna la instancia del bot para notificaciones"""
         self.bot = bot
     
@@ -76,7 +80,7 @@ class AlertService:
         except Exception as e:
             logger.error(f"Error checking alerts: {e}")
     
-    async def _check_single_alert(self, alert: Dict, current_price: float, last_price: float = None):
+    async def _check_single_alert(self, alert: Dict, current_price: float, last_price: float = None, force_check: bool = False):
         """Verifica una alerta individual"""
         try:
             triggered = False
@@ -92,21 +96,28 @@ class AlertService:
                     triggered = True
                     message = f"📉 *{alert['coin_symbol']}* ha caído por debajo de ${alert['threshold']}!\nPrecio actual: ${current_price:,.4f}"
             
-            elif alert['alert_type'] == 'percent_change' and last_price:
-                change_percent = ((current_price - last_price) / last_price) * 100
-                if abs(change_percent) >= alert['threshold']:
-                    triggered = True
-                    direction = "subido" if change_percent > 0 else "bajado"
-                    message = (
-                        f"📊 *{alert['coin_symbol']}* ha {direction} {abs(change_percent):.2f}%!\n"
-                        f"De ${last_price:,.4f} a ${current_price:,.4f}"
-                    )
+            elif alert['alert_type'] == 'percent_change' and (last_price or force_check):
+                # Si es force_check y no hay last_price, usamos el precio de cuando se creó la alerta si estuviera disponible, 
+                # pero por ahora mantenemos la lógica de comparación si hay last_price.
+                if last_price:
+                    change_percent = ((current_price - last_price) / last_price) * 100
+                    if abs(change_percent) >= alert['threshold']:
+                        triggered = True
+                        direction = "subido" if change_percent > 0 else "bajado"
+                        message = (
+                            f"📊 *{alert['coin_symbol']}* ha {direction} {abs(change_percent):.2f}%!\n"
+                            f"De ${last_price:,.4f} a ${current_price:,.4f}"
+                        )
             
             if triggered:
                 await self._trigger_alert(alert, message)
+                return True
+            
+            return False
                 
         except Exception as e:
             logger.error(f"Error checking single alert: {e}")
+            return False
     
     async def _trigger_alert(self, alert: Dict, message: str):
         """Dispara una alerta y notifica al usuario"""
@@ -114,6 +125,13 @@ class AlertService:
             # Obtener información del usuario
             user = await mongodb.users.find_one({"_id": alert['user_id']})
             if not user or not user.get('alerts_active', True):
+                return
+            
+            # Verificar cooldown (evitar spam)
+            alert_key = f"{alert['_id']}_{alert['alert_type']}"
+            last_trigger = self.alert_cooldown.get(alert_key)
+            
+            if last_trigger and (datetime.utcnow() - last_trigger).seconds < 300:  # 5 minutos
                 return
             
             # Marcar alerta como disparada
@@ -127,18 +145,77 @@ class AlertService:
                 }
             )
             
-            # Enviar la notificación real a Telegram
+            # Enviar notificación si tenemos bot configurado
             if self.bot:
-                await self._send_telegram_notification(user['telegram_id'], message)
+                try:
+                    await self.bot.send_message(
+                        chat_id=user['telegram_id'],
+                        text=f"🚨 *ALERTA ACTIVADA*\n\n{message}\n\n_Esta alerta ha sido desactivada automáticamente._",
+                        parse_mode='Markdown'
+                    )
+                    self.alert_cooldown[alert_key] = datetime.utcnow()
+                    logger.info(f"✅ Notificación enviada a usuario {user['telegram_id']}")
+                    
+                    # Guardar en historial de notificaciones
+                    await self._save_notification_history(
+                        user_id=user['_id'],
+                        alert_id=alert['_id'],
+                        message=message
+                    )
+                    
+                except TelegramError as e:
+                    logger.error(f"Error enviando mensaje a Telegram: {e}")
+                    # Si el usuario bloqueó el bot, desactivar alertas
+                    if "bot was blocked" in str(e).lower():
+                        await mongodb.users.update_one(
+                            {"_id": user['_id']},
+                            {"$set": {"alerts_active": False}}
+                        )
             else:
-                logger.warning(f"⚠️ Alerta disparada para {user['telegram_id']} pero el bot no está configurado")
-            
-            logger.info(f"⚠️ Alerta disparada para usuario {user['telegram_id']}: {message}")
-            
+                logger.warning(f"⚠️ Alerta disparada pero bot no configurado: {message}")
+                
         except Exception as e:
             logger.error(f"Error triggering alert: {e}")
     
-    async def _send_telegram_notification(self, chat_id: int, message: str):
-        """Envía una notificación por Telegram"""
-        if self.bot:
-            await self.bot.send_message(chat_id=chat_id, text=message)
+    async def _save_notification_history(self, user_id: ObjectId, alert_id: ObjectId, message: str):
+        """Guardar historial de notificaciones"""
+        try:
+            await mongodb.notifications.insert_one({
+                "user_id": user_id,
+                "alert_id": alert_id,
+                "message": message,
+                "sent_at": datetime.utcnow(),
+                "delivered": True
+            })
+        except Exception as e:
+            logger.error(f"Error saving notification history: {e}")
+    
+    async def check_user_alerts(self, user_id: int, force_check: bool = False):
+        """Verifica alertas de un usuario específico (para comandos)"""
+        try:
+            user = await mongodb.users.find_one({"telegram_id": user_id})
+            if not user:
+                return []
+            
+            alerts = await mongodb.alerts.find({
+                "user_id": user['_id'],
+                "is_active": True
+            }).to_list(length=None)
+            
+            triggered_alerts = []
+            current_prices = {}
+            
+            for alert in alerts:
+                if alert['coin_id'] not in current_prices:
+                    price = await self.price_monitor._get_price_by_id(alert['coin_id'])
+                    current_prices[alert['coin_id']] = price
+                
+                if current_prices[alert['coin_id']]:
+                    triggered = await self._check_single_alert(alert, current_prices[alert['coin_id']], force_check=force_check)
+                    if triggered:
+                        triggered_alerts.append(alert)
+            
+            return triggered_alerts
+        except Exception as e:
+            logger.error(f"Error checking user alerts: {e}")
+            return []

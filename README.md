@@ -67,6 +67,57 @@ docker-compose up --build
 
 ---
 
+## 🚀 Despliegue en Fly.io
+
+### Prerrequisitos
+1. Cuenta en [Fly.io](https://fly.io)
+2. Fly CLI instalado: `curl -L https://fly.io/install.sh | sh`
+3. Token de Telegram Bot (@BotFather)
+
+### Pasos de despliegue
+
+```bash
+# 1. Clonar y configurar
+git clone <tu-repositorio>
+cd crypto-sentinel-bot
+cp .env.example .env
+
+# 2. Editar .env con tus credenciales
+nano .env
+
+# 3. Ejecutar script de despliegue
+chmod +x deploy/fly_deploy.sh
+./deploy/fly_deploy.sh
+
+# 4. Verificar despliegue
+flyctl status --app crypto-sentinel-bot
+flyctl logs --app crypto-sentinel-bot
+```
+
+### Variables de entorno requeridas
+```bash
+TELEGRAM_BOT_TOKEN=tu_token_de_telegram
+MONGODB_URI=mongodb+srv://usuario:contraseña@cluster.mongodb.net/crypto_sentinel
+```
+
+### Base de datos en producción
+Recomendamos usar:
+- **MongoDB Atlas** (gratis hasta 512MB)
+- O Railway para MongoDB gratis
+
+### Monitoreo
+- **Logs:** `flyctl logs --app crypto-sentinel-bot`
+- **Health check:** `https://crypto-sentinel-bot.fly.dev/health`
+- **Estado:** `https://crypto-sentinel-bot.fly.dev/status`
+
+### Mantenimiento automático
+El bot incluye tareas automáticas:
+- Limpieza de datos antiguos (diario a las 2AM UTC)
+- Actualización de historial de precios (cada hora)
+- Generación de reportes diarios
+
+---
+
 ## 📚 Comandos del Bot
 - `/start` - Inicia el bot y registra tu usuario.
 - `/price` - Consulta precios actuales.

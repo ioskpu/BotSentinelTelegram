@@ -314,3 +314,50 @@ class TelegramHandlers:
                      "*Ejemplo:* `/alert SOL > 150`",
                 parse_mode='Markdown'
             )
+
+    async def check_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Maneja el comando /check - Verifica alertas manualmente"""
+        user = await mongodb.users.find_one({"telegram_id": update.effective_user.id})
+        if not user:
+            await update.message.reply_text("❌ Usuario no encontrado")
+            return
+        
+        message = await update.message.reply_text("🔍 Verificando tus alertas...")
+        
+        # Obtener servicio de alertas del bot (inyectado o desde price_monitor)
+        alert_service = getattr(self, 'alert_service', None)
+        if not alert_service and hasattr(self.price_monitor, 'alert_service'):
+            alert_service = self.price_monitor.alert_service
+        
+        if alert_service:
+            triggered = await alert_service.check_user_alerts(update.effective_user.id, force_check=True)
+            
+            if triggered:
+                await message.edit_text(
+                    f"✅ Se activaron {len(triggered)} alertas. Revisa tus mensajes privados."
+                )
+            else:
+                await message.edit_text("📭 No se activaron alertas en este momento.")
+        else:
+            await message.edit_text("⚠️ Servicio de alertas no disponible temporalmente.")
+    
+    async def test_alert_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Maneja el comando /testalert - Envía una alerta de prueba"""
+        try:
+            # Crear alerta de prueba
+            test_message = (
+                "🚨 *ALERTA DE PRUEBA*\n\n"
+                "• *Moneda:* SOL\n"
+                "• *Precio actual:* $150.25\n"
+                "• *Condición:* > $150.00\n\n"
+                "✅ Este es un mensaje de prueba para verificar "
+                "que las notificaciones funcionan correctamente."
+            )
+            
+            await update.message.reply_text(test_message, parse_mode='Markdown')
+            
+            logger.info(f"Usuario {update.effective_user.id} solicitó prueba de alerta")
+            
+        except Exception as e:
+            await update.message.reply_text("❌ Error en la prueba de alerta")
+            logger.error(f"Error en test_alert: {e}")
