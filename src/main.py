@@ -60,6 +60,9 @@ class CryptoApp:
             # Índice para precio histórico por moneda y timestamp
             await mongodb.price_history.create_index([("coin_id", 1), ("timestamp", -1)])
             
+            # Índice para portafolio por usuario
+            await mongodb.portfolio.create_index("user_id")
+            
             logger.info("📊 Índices de MongoDB creados")
         except Exception as e:
             logger.error(f"Error creando índices: {e}")

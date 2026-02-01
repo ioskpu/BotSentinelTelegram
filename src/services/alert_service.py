@@ -63,7 +63,14 @@ class AlertService:
             
             # Obtener precios actuales para las monedas necesarias
             coin_ids = list(alerts_by_coin.keys())
-            current_prices = await self.price_monitor.get_multiple_prices(coin_ids)
+            # Siempre incluir monedas principales para el historial
+            main_coins = ['bitcoin', 'ethereum', 'solana', 'stellar', 'cardano', 'polkadot', 'avalanche-2']
+            all_coin_ids = list(set(coin_ids + main_coins))
+            
+            current_prices = await self.price_monitor.get_multiple_prices(all_coin_ids)
+            
+            # Guardar en historial de precios
+            await self._save_price_history(current_prices)
             
             # Procesar cada alerta
             for coin_id, coin_alerts in alerts_by_coin.items():
@@ -189,7 +196,29 @@ class AlertService:
             })
         except Exception as e:
             logger.error(f"Error saving notification history: {e}")
-    
+
+    async def _save_price_history(self, prices: Dict[str, float]):
+        """Guarda los precios actuales en la colección price_history"""
+        try:
+            if not prices:
+                return
+                
+            timestamp = datetime.utcnow()
+            history_entries = [
+                {
+                    "coin_id": coin_id,
+                    "price": price,
+                    "timestamp": timestamp
+                }
+                for coin_id, price in prices.items() if price is not None
+            ]
+            
+            if history_entries:
+                await mongodb.price_history.insert_many(history_entries)
+                # logger.debug(f"Guardadas {len(history_entries)} entradas en historial de precios")
+        except Exception as e:
+            logger.error(f"Error saving price history: {e}")
+
     async def check_user_alerts(self, user_id: int, force_check: bool = False):
         """Verifica alertas de un usuario específico (para comandos)"""
         try:

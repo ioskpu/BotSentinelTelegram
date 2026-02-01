@@ -27,12 +27,40 @@ class PriceMonitor:
         return await self._get_price_by_id('stellar')
     
     async def get_price_by_symbol(self, symbol: str) -> Optional[float]:
-        """Obtiene precio por símbolo (SOL, XLM)"""
+        """Obtiene precio por símbolo"""
         symbol_to_id = {
+            # Monedas principales
             'SOL': 'solana',
             'XLM': 'stellar',
             'BTC': 'bitcoin',
-            'ETH': 'ethereum'
+            'ETH': 'ethereum',
+            
+            # Layer 1
+            'AVAX': 'avalanche-2',
+            'ADA': 'cardano',
+            'DOT': 'polkadot',
+            'MATIC': 'matic-network',
+            'ATOM': 'cosmos',
+            
+            # Meme coins
+            'DOGE': 'dogecoin',
+            'SHIB': 'shiba-inu',
+            'PEPE': 'pepe',
+            
+            # DeFi
+            'UNI': 'uniswap',
+            'LINK': 'chainlink',
+            'AAVE': 'aave',
+            
+            # Stablecoins
+            'USDT': 'tether',
+            'USDC': 'usd-coin',
+            'DAI': 'dai',
+            
+            # Otras
+            'XRP': 'ripple',
+            'LTC': 'litecoin',
+            'BNB': 'binancecoin',
         }
         
         coin_id = symbol_to_id.get(symbol.upper())
@@ -68,10 +96,12 @@ class PriceMonitor:
         
         return None
     
-    async def get_multiple_prices(self, coin_ids: List[str]) -> Dict[str, Optional[float]]:
+    async def get_multiple_prices(self, coin_ids: List[str] = None) -> Dict[str, Optional[float]]:
         """Obtiene múltiples precios en una sola llamada"""
         if not coin_ids:
-            return {}
+            # Monedas por defecto si no se especifican
+            coin_ids = ['solana', 'stellar', 'bitcoin', 'ethereum', 
+                       'cardano', 'polkadot', 'avalanche-2']
         
         if not self.session:
             await self.start()
@@ -98,3 +128,32 @@ class PriceMonitor:
             return {coin_id: self.cache.get(coin_id) for coin_id in coin_ids}
         
         return {}
+
+    async def get_trending_coins(self) -> List[Dict]:
+        """Obtiene monedas en tendencia"""
+        try:
+            if not self.session:
+                await self.start()
+                
+            url = f"{settings.COINGECKO_API_URL}/search/trending"
+            async with self.session.get(url, timeout=10) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    trending = []
+                    
+                    for item in data.get('coins', [])[:10]:  # Top 10
+                        coin_data = item.get('item', {})
+                        trending.append({
+                            'name': coin_data.get('name'),
+                            'symbol': coin_data.get('symbol', '').upper(),
+                            'market_cap_rank': coin_data.get('market_cap_rank'),
+                            'score': item.get('score', 0)
+                        })
+                    
+                    return trending
+                else:
+                    logger.warning(f"CoinGecko Trending API error: {response.status}")
+                    return []
+        except Exception as e:
+            logger.error(f"Error getting trending coins: {e}")
+            return []

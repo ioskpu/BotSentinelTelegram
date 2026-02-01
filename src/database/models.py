@@ -27,6 +27,20 @@ class User(BaseModel):
         populate_by_name = True
         arbitrary_types_allowed = True
 
+class PortfolioEntry(BaseModel):
+    id: Optional[PyObjectId] = Field(default_factory=PyObjectId, alias="_id")
+    user_id: PyObjectId
+    coin_symbol: str
+    amount: float
+    buy_price: Optional[float] = None
+    buy_date: Optional[datetime] = None
+    notes: Optional[str] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    
+    class Config:
+        populate_by_name = True
+        arbitrary_types_allowed = True
+
 class Alert(BaseModel):
     id: Optional[PyObjectId] = Field(default_factory=PyObjectId, alias="_id")
     user_id: PyObjectId
