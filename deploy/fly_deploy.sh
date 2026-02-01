@@ -32,41 +32,35 @@ fi
 APP_NAME="crypto-sentinel-bot"
 if ! flyctl apps list | grep -q "$APP_NAME"; then
     echo -e "${YELLOW}📦 Creando aplicación en Fly.io...${NC}"
-    flyctl apps create "$APP_NAME" --no-config
+    flyctl apps create --name "$APP_NAME"
     echo -e "${GREEN}✅ Aplicación creada${NC}"
 fi
-
-# Configurar región
-echo -e "${YELLOW}🌍 Configurando región (iad - Virginia, USA)...${NC}"
-flyctl regions set iad --app "$APP_NAME" || true
 
 # Configurar secrets desde .env
 echo -e "${YELLOW}🔐 Configurando secrets...${NC}"
 if [ -f .env ]; then
-    # Leer variables de .env
-    while IFS= read -r line || [[ -n "$line" ]]; do
-        # Ignorar comentarios y líneas vacías
-        if [[ -n "$line" ]] && [[ ! "$line" =~ ^\s*# ]]; then
-            key=$(echo "$line" | cut -d '=' -f1)
-            value=$(echo "$line" | cut -d '=' -f2-)
-            
-            # Configurar solo las variables necesarias
-            if [[ "$key" == "TELEGRAM_BOT_TOKEN" ]] || [[ "$key" == "MONGODB_URI" ]]; then
-                echo -e "${YELLOW}  Setting $key...${NC}"
-                flyctl secrets set "$key=$value" --app "$APP_NAME"
-            fi
-        fi
-    done < .env
+    # Extraer variables necesarias
+    TELEGRAM_BOT_TOKEN=$(grep "^TELEGRAM_BOT_TOKEN=" .env | sed 's/^TELEGRAM_BOT_TOKEN=//')
+    MONGODB_URI=$(grep "^MONGODB_URI=" .env | sed 's/^MONGODB_URI=//')
+    
+    if [ ! -z "$TELEGRAM_BOT_TOKEN" ]; then
+        echo -e "${YELLOW}  Setting TELEGRAM_BOT_TOKEN...${NC}"
+        flyctl secrets set TELEGRAM_BOT_TOKEN="$TELEGRAM_BOT_TOKEN" --app "$APP_NAME"
+    fi
+    
+    if [ ! -z "$MONGODB_URI" ]; then
+        echo -e "${YELLOW}  Setting MONGODB_URI...${NC}"
+        flyctl secrets set MONGODB_URI="$MONGODB_URI" --app "$APP_NAME"
+    fi
 else
     echo -e "${RED}❌ No se encontró archivo .env${NC}"
-    echo -e "${YELLOW}⚠️  Usando: flyctl secrets set TELEGRAM_BOT_TOKEN=tu_token${NC}"
-    echo -e "${YELLOW}⚠️  Usando: flyctl secrets set MONGODB_URI=tu_mongodb_uri${NC}"
     exit 1
 fi
 
 # Desplegar aplicación
 echo -e "${YELLOW}🚀 Desplegando aplicación...${NC}"
-flyctl deploy --remote-only --app "$APP_NAME" --detach
+# Usamos --ha=false para evitar que intente crear 2 máquinas si estamos en el plan gratuito
+flyctl deploy --remote-only --app "$APP_NAME" --ha=false
 
 # Esperar a que la aplicación esté lista
 echo -e "${YELLOW}⏳ Esperando a que la aplicación esté lista...${NC}"

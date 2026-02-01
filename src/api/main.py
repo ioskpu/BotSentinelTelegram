@@ -23,6 +23,11 @@ def create_app():
     # Include routers
     app.include_router(health.router, prefix="/api/v1", tags=["health"])
     
+    # Fly.io health check redirect
+    @app.get("/health")
+    async def health_check_fly():
+        return await health.health_check()
+    
     @app.get("/")
     async def root():
         return {

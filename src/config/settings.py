@@ -1,4 +1,4 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import Optional
 
 class Settings(BaseSettings):
@@ -22,11 +22,15 @@ class Settings(BaseSettings):
     # Redis (para cache y workers)
     REDIS_URL: Optional[str] = "redis://localhost:6379"
     
-    # Modo debug
+    # Modo debug e entorno
     DEBUG: bool = False
+    ENVIRONMENT: str = "development"
     
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+        case_sensitive=True
+    )
 
 settings = Settings()

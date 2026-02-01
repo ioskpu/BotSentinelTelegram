@@ -4,123 +4,74 @@ Crypto Sentinel es un asistente inteligente diseñado para el monitoreo y gesti�
 
 ---
 
-## 📍 Estado del Proyecto: Fase 1 (Actual)
+## 📍 Estado del Proyecto: Fase 2 (En Progreso)
 
-Actualmente el proyecto se encuentra en su **Fase 1**, enfocada en la infraestructura base y el monitoreo de mercado.
+Actualmente el proyecto se encuentra en su **Fase 2**, enfocada en la robustez del sistema, despliegue en producción y preparación para integraciones Web3.
 
-### ¿Qué ofrece la Fase 1?
-- **Monitoreo Multimoneda:** Seguimiento en tiempo real de precios para Solana (SOL), Stellar (XLM), Bitcoin (BTC) y Ethereum (ETH) mediante la API de CoinGecko.
+### ¿Qué ofrece el Bot?
+- **Monitoreo Multimoneda:** Seguimiento en tiempo real de precios para SOL, XLM, BTC y ETH mediante la API de CoinGecko.
 - **Sistema de Alertas Inteligentes:**
-  - `Precio Superior`: Notificación cuando una moneda supera un umbral.
-  - `Precio Inferior`: Notificación cuando cae por debajo de un valor.
-  - `Variación Porcentual`: Alertas basadas en cambios bruscos de mercado.
-- **Infraestructura Robusta:**
-  - Totalmente contenedorizado con **Docker** y **Docker Compose**.
-  - Base de datos asíncrona con **MongoDB** y **Motor**.
-  - Gestión de logs avanzada con **Loguru**.
-- **Interfaz Telegram:** Comandos interactivos (`/price`, `/alert`, `/myalerts`) para una gestión sencilla desde cualquier dispositivo.
+  - `Precio Superior/Inferior`: Notificación inmediata al cruzar umbrales.
+  - `Cooldown de 5 min`: Evita spam de notificaciones repetitivas.
+- **Infraestructura de Producción:**
+  - **Fly.io**: Despliegue en la nube con escalabilidad automática.
+  - **MongoDB Atlas**: Persistencia en base de datos gestionada.
+  - **FastAPI**: Servidor web integrado para monitoreo y salud (Health Checks).
+- **Interfaz Telegram:** Comandos interactivos (`/start`, `/price`, `/alert`, `/myalerts`).
 
 ---
 
-## 🛠️ Próximamente: Fase 2 (En Desarrollo)
+## 🏗️ Arquitectura y Estructura
 
-Estamos preparando la expansión del bot hacia un ecosistema financiero completo:
+El sistema está diseñado de forma modular para facilitar su mantenimiento:
 
-- **Integración con Stellar Network:**
-  - Consultas de saldo en la red Stellar.
-  - Ejecución de transacciones directamente desde el bot.
-- **Dashboard Web Administrativo:**
-  - Interfaz visual para gestionar alertas y ver estadísticas históricas.
-  - Panel de control de usuario desarrollado en FastAPI/React.
-- **Alertas de Volumen y Ballenas:** Detección de movimientos inusuales en el mercado.
+- `src/bot/`: Lógica del Bot de Telegram (handlers, comandos).
+- `src/services/`: Motores de precios y alertas.
+- `src/api/`: Servidor FastAPI para monitoreo y endpoints externos.
+- `src/database/`: Capa de persistencia asíncrona con MongoDB (Motor).
+- `src/config/`: Gestión de configuraciones y secretos con Pydantic.
 
----
-
-## � Documentación Detallada
-
-Para más información sobre el funcionamiento interno y la configuración, consulta nuestra documentación:
-
-- [🏗️ Arquitectura del Sistema](docs/architecture.md): Detalles sobre componentes y flujo de datos.
-- [📡 API y Comandos](docs/api.md): Guía completa de comandos y esquemas de datos.
-- [🛠️ Guía de Instalación](docs/setup.md): Instrucciones paso a paso para diferentes entornos.
+Para más detalles, consulta [🏗️ Arquitectura del Sistema](docs/architecture.md).
 
 ---
 
-## �🚀 Instalación Rápida
+## 🚀 Despliegue Rápido (MVP)
 
 ### 1. Requisitos
-- Docker y Docker Compose instalados.
-- Un Token de Bot de Telegram (obtenido via [@BotFather](https://t.me/botfather)).
+- Token de Telegram (@BotFather).
+- Cuenta en MongoDB Atlas (URI de conexión).
+- Fly CLI instalado para despliegue en la nube.
 
-### 2. Configuración
-Crea un archivo `.env` en la raíz del proyecto basado en `.env.example`:
+### 2. Configuración Local
+Crea un archivo `.env` basado en el entorno de producción:
 ```env
 TELEGRAM_BOT_TOKEN=tu_token_aqui
-MONGODB_URI=mongodb://crypto_mongodb:27017
+MONGODB_URI=mongodb+srv://usuario:password@cluster.mongodb.net/crypto_bot
 MONGODB_DB_NAME=crypto_bot
+ENVIRONMENT=production
 ```
 
-### 3. Ejecución
+### 3. Despliegue en Fly.io
+El proyecto incluye un script automatizado para el despliegue:
 ```bash
-docker-compose up --build
-```
-
----
-
-## 🚀 Despliegue en Fly.io
-
-### Prerrequisitos
-1. Cuenta en [Fly.io](https://fly.io)
-2. Fly CLI instalado: `curl -L https://fly.io/install.sh | sh`
-3. Token de Telegram Bot (@BotFather)
-
-### Pasos de despliegue
-
-```bash
-# 1. Clonar y configurar
-git clone <tu-repositorio>
-cd crypto-sentinel-bot
-cp .env.example .env
-
-# 2. Editar .env con tus credenciales
-nano .env
-
-# 3. Ejecutar script de despliegue
+# Otorgar permisos
 chmod +x deploy/fly_deploy.sh
+
+# Ejecutar despliegue
 ./deploy/fly_deploy.sh
-
-# 4. Verificar despliegue
-flyctl status --app crypto-sentinel-bot
-flyctl logs --app crypto-sentinel-bot
 ```
-
-### Variables de entorno requeridas
-```bash
-TELEGRAM_BOT_TOKEN=tu_token_de_telegram
-MONGODB_URI=mongodb+srv://usuario:contraseña@cluster.mongodb.net/crypto_sentinel
-```
-
-### Base de datos en producción
-Recomendamos usar:
-- **MongoDB Atlas** (gratis hasta 512MB)
-- O Railway para MongoDB gratis
-
-### Monitoreo
-- **Logs:** `flyctl logs --app crypto-sentinel-bot`
-- **Health check:** `https://crypto-sentinel-bot.fly.dev/health`
-- **Estado:** `https://crypto-sentinel-bot.fly.dev/status`
-
-### Mantenimiento automático
-El bot incluye tareas automáticas:
-- Limpieza de datos antiguos (diario a las 2AM UTC)
-- Actualización de historial de precios (cada hora)
-- Generación de reportes diarios
 
 ---
 
-## 📚 Comandos del Bot
-- `/start` - Inicia el bot y registra tu usuario.
-- `/price` - Consulta precios actuales.
-- `/alert` - Configura una nueva alerta.
-- `/myalerts` - Lista y gestiona tus alertas activas.
-- `/help` - Guía detallada de uso.
+## 📚 Documentación Detallada
+
+- [🛠️ Guía de Instalación y Setup](docs/setup.md): Paso a paso para MongoDB Atlas y Fly.io.
+- [📂 Estructura del Proyecto](docs/project_structure.md): Descripción de cada archivo y carpeta.
+- [🏗️ Arquitectura](docs/architecture.md): Diagrama de flujo y componentes.
+
+---
+
+## 🛠️ Próximamente (Fase 2.5)
+- Integración con Stellar Network para consultas de saldo.
+- Dashboard Web para gestión de alertas.
+- Alertas de volumen y movimientos de ballenas.

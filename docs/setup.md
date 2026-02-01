@@ -1,61 +1,72 @@
 # 🛠️ Guía de Configuración e Instalación
 
-Esta guía detalla cómo poner en marcha el Crypto Sentinel Bot en diferentes entornos.
+Esta guía detalla los pasos para configurar el entorno de producción (MongoDB Atlas + Fly.io) y el desarrollo local.
 
-## Requisitos Previos
+## 1. Configuración de Base de Datos (MongoDB Atlas)
 
-- Docker y Docker Compose (Recomendado).
-- Alternativamente: Python 3.11+, MongoDB y Redis.
+Para producción, utilizamos MongoDB Atlas. Sigue estos pasos:
 
-## Variables de Entorno
+1. **Crear Cluster**: Crea un cluster gratuito (M0) en MongoDB Atlas.
+2. **Network Access**: Agrega la IP `0.0.0.0/0` (permitir acceso desde cualquier lugar) para que Fly.io pueda conectarse.
+3. **Database User**: Crea un usuario con permisos de `readWriteAnyDatabase`.
+4. **Connection String**: Copia la URI de conexión. Debería verse así:
+   `mongodb+srv://<usuario>:<password>@cluster0.abcde.mongodb.net/?retryWrites=true&w=majority`
 
-El bot utiliza un archivo `.env` para su configuración. Crea uno en la raíz:
+## 2. Configuración de Variables de Entorno
+
+Crea un archivo `.env` en la raíz del proyecto:
 
 ```bash
-# Telegram
-TELEGRAM_BOT_TOKEN=tu_token_aqui
+# Telegram (Obtenlo de @BotFather)
+TELEGRAM_BOT_TOKEN=8090803712:AAERXJmZM9euXPVqIkm1WFx_TB3P2ZNOFVc
 
-# MongoDB (Docker)
-MONGODB_URI=mongodb://crypto_mongodb:27017
+# MongoDB Atlas
+MONGODB_URI=mongodb+srv://usuario:password@cluster.mongodb.net/crypto_bot
 MONGODB_DB_NAME=crypto_bot
 
-# Configuración de Alertas
-ALERT_CHECK_INTERVAL=60  # Segundos entre chequeos
-COINGECKO_API_URL=https://api.coingecko.com/api/v3
+# Entorno
+ENVIRONMENT=production
+DEBUG=false
 ```
 
-## Instalación con Docker (Recomendado)
+## 3. Despliegue en Fly.io
 
-Docker gestiona automáticamente todas las dependencias y servicios.
+El despliegue está automatizado mediante el script `deploy/fly_deploy.sh`. Este script realiza las siguientes acciones:
+
+1. **Crea la App**: Crea la aplicación en Fly.io si no existe.
+2. **Configura Secretos**: Sincroniza las variables de tu `.env` con Fly.io de forma segura.
+3. **Despliega**: Sube el código y lanza el contenedor.
+
+### Pasos para desplegar:
 
 ```bash
-# Construir e iniciar contenedores
-docker-compose up --build -d
+# Asegúrate de estar logueado en Fly.io
+flyctl auth login
 
-# Ver logs del bot
-docker logs crypto_bot -f
+# Ejecutar el despliegue
+./deploy/fly_deploy.sh
 ```
 
-## Despliegue en Fly.io
+### Verificación del Despliegue:
+- **Logs**: `flyctl logs --app crypto-sentinel-bot`
+- **Salud**: Abre `https://crypto-sentinel-bot.fly.dev/health` en tu navegador.
 
-El proyecto está configurado para Fly.io. Asegúrate de tener instalado `flyctl`.
+## 4. Desarrollo Local
 
-1. **Configurar la App**:
+Si deseas correr el bot localmente sin Docker:
+
+1. **Entorno Virtual**:
    ```bash
-   fly launch
+   python -m venv .venv
+   source .venv/bin/activate  # En Windows: .venv\Scripts\activate
    ```
-2. **Configurar Secretos**:
+2. **Instalar Dependencias**:
    ```bash
-   fly secrets set TELEGRAM_BOT_TOKEN=tu_token
+   pip install -r requirements.txt
    ```
-3. **Desplegar**:
+3. **Ejecutar**:
    ```bash
-   fly deploy
+   python src/main.py
    ```
 
-## Desarrollo Local (Sin Docker)
-
-1. Crear entorno virtual: `python -m venv .venv`
-2. Activar entorno: `.venv\Scripts\activate` (Windows) o `source .venv/bin/activate` (Linux/Mac)
-3. Instalar dependencias: `pip install -r requirements.txt`
-4. Iniciar: `python src/main.py`
+> **Nota**: Para desarrollo local, puedes usar una instancia local de MongoDB cambiando la `MONGODB_URI` en tu `.env`.
