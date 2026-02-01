@@ -6,8 +6,12 @@ from loguru import logger
 
 class PortfolioService:
     def __init__(self):
-        self.db = mongodb
-        self.portfolio_collection = self.db.portfolio
+        self._db = mongodb
+    
+    @property
+    def portfolio_collection(self):
+        """Acceso lazy a la colección de portafolio"""
+        return self._db.portfolio
     
     async def add_entry(self, user_id: PyObjectId, coin_symbol: str, amount: float, 
                        buy_price: Optional[float] = None) -> PortfolioEntry:

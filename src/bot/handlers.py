@@ -35,10 +35,11 @@ class TelegramHandlers:
 
 *Comandos disponibles:*
 /price - Ver precios de criptomonedas
-/alert - Configurar una alerta de precio
-/myalerts - Ver tus alertas activas
-/predict [moneda] - Análisis inteligente de tendencia
-/help - Mostrar ayuda
+/coins - Listar las 28+ monedas soportadas
+/trending - Ver tendencias de CoinGecko
+/predict [moneda] - Análisis IA y Soportes
+/portfolio - Gestionar tu inversión
+/help - Mostrar ayuda completa
         """
         
         await update.message.reply_text(welcome_text, parse_mode='Markdown')
@@ -50,21 +51,22 @@ class TelegramHandlers:
 
 *Comandos:*
 /start - Iniciar el bot
-/price [moneda] - Ver precio de una cripto (ej: /price SOL)
-/alert - Configurar alerta de precio
+/price [moneda] - Ver precio (ej: /price SOL)
+/coins - Listar 28 monedas soportadas
+/trending - Top 7 monedas en tendencia
+/convert [cant] [de] [a] - Conversor (ej: /convert 1 BTC USD)
+/alert [moneda] [condición] - Configurar alerta
 /myalerts - Listar alertas activas
-/deletealert [id] - Eliminar una alerta
-/predict [moneda] - Análisis IA (RSI, Soportes)
+/predict [moneda] - Análisis Técnico (RSI, Soportes)
+/chart [moneda] - Ver gráfico de precio
 /portfolio - Ver valor de tu inversión
 /padd [moneda] [cant] [precio] - Añadir compra
+/pdel [id] - Eliminar del portafolio
 /stats - Estadísticas del bot
 
 *Ejemplos de alertas:*
-- `SOL > 150` (alerta cuando SOL supere $150)
-- `XLM < 0.12` (alerta cuando XLM baje de $0.12)
-- `SOL 10%` (alerta cuando SOL suba/baje 10%)
-
-*Monedas soportadas:* SOL, XLM, BTC, ETH
+- `SOL > 150` (alerta cuando supere $150)
+- `SOL 10%` (alerta cuando cambie un 10%)
         """
         
         await update.message.reply_text(help_text, parse_mode='Markdown')
