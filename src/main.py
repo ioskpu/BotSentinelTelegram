@@ -41,6 +41,7 @@ class CryptoApp:
         
         # Vincular el servicio de alertas a los handlers del bot para comandos como /check
         self.telegram_bot.handlers.alert_service = self.alert_service
+        self.telegram_bot.blockchain_handlers.alert_service = self.alert_service
         
         # Crear índices en MongoDB
         await self._create_database_indexes()

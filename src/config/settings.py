@@ -13,7 +13,14 @@ class Settings(BaseSettings):
     # APIs
     COINGECKO_API_URL: str = "https://api.coingecko.com/api/v3"
     SOLANA_RPC_URL: Optional[str] = "https://api.mainnet-beta.solana.com"
+    SOLANA_WS_URL: Optional[str] = "wss://api.mainnet-beta.solana.com"
     STELLAR_HORIZON_URL: str = "https://horizon.stellar.org"
+    STELLAR_NETWORK_PASSPHRASE: str = "Public Global Stellar Network ; September 2015"
+    ETHEREUM_RPC_URL: Optional[str] = None
+    
+    # Configuración de monitoreo blockchain
+    BLOCKCHAIN_CHECK_INTERVAL: int = 60  # segundos
+    MAX_WATCHED_ACCOUNTS_PER_USER: int = 10
     
     # Configuración de alertas
     ALERT_CHECK_INTERVAL: int = 60  # segundos

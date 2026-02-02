@@ -4,11 +4,13 @@ from telegram.error import TelegramError
 from loguru import logger
 from src.config.settings import settings
 from src.bot.handlers import TelegramHandlers
+from src.bot.blockchain_handlers import BlockchainHandlers
 
 class CryptoTelegramBot:
     def __init__(self):
         self.application = None
         self.handlers = TelegramHandlers()
+        self.blockchain_handlers = BlockchainHandlers()
     
     async def initialize(self):
         """Inicializa el bot de Telegram"""
@@ -46,6 +48,18 @@ class CryptoTelegramBot:
         self.application.add_handler(CommandHandler("padd", self.handlers.portfolio_add_command))
         self.application.add_handler(CommandHandler("pdel", self.handlers.portfolio_del_command))
         self.application.add_handler(CommandHandler("predict", self.handlers.predict_command))
+        
+        # Comandos Blockchain
+        self.application.add_handler(CommandHandler("sbalance", self.blockchain_handlers.stellar_balance_command))
+        self.application.add_handler(CommandHandler("swatch", self.blockchain_handlers.stellar_watch_command))
+        self.application.add_handler(CommandHandler("sunwatch", self.blockchain_handlers.stellar_unwatch_command))
+        self.application.add_handler(CommandHandler("stransactions", self.blockchain_handlers.stellar_transactions_command))
+        self.application.add_handler(CommandHandler("sobalance", self.blockchain_handlers.solana_balance_command))
+        self.application.add_handler(CommandHandler("sotokens", self.blockchain_handlers.solana_tokens_command))
+        self.application.add_handler(CommandHandler("sowatch", self.blockchain_handlers.solana_watch_command))
+        self.application.add_handler(CommandHandler("sounwatch", self.blockchain_handlers.solana_unwatch_command))
+        self.application.add_handler(CommandHandler("sotransactions", self.blockchain_handlers.solana_transactions_command))
+        self.application.add_handler(CommandHandler("blockchain", self.blockchain_handlers.blockchain_help_command))
         
         # Callback queries (botones)
         self.application.add_handler(CallbackQueryHandler(self.handlers.callback_query_handler))

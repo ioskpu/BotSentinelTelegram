@@ -3,14 +3,20 @@ from telegram.ext import ContextTypes, CommandHandler, MessageHandler, filters
 from loguru import logger
 from src.services.price_monitor import PriceMonitor
 from src.services.portfolio_service import PortfolioService
+from src.services.stellar.client import StellarClient
+from src.services.solana.client import SolanaClient
 from src.database.mongodb import mongodb
 from src.database.models import User, Alert, PortfolioEntry
 import re
+from datetime import datetime
 
 class TelegramHandlers:
-    def __init__(self):
+    def __init__(self, alert_service=None):
         self.price_monitor = PriceMonitor()
         self.portfolio_service = PortfolioService()
+        self.stellar_client = StellarClient()
+        self.solana_client = SolanaClient()
+        self.alert_service = alert_service
     
     async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Maneja el comando /start"""
@@ -33,13 +39,19 @@ class TelegramHandlers:
         welcome_text = """
 🤖 *Bienvenido a Crypto Sentinel Bot* 🚀
 
-*Comandos disponibles:*
-/price - Ver precios de criptomonedas
-/coins - Listar las 28+ monedas soportadas
-/trending - Ver tendencias de CoinGecko
-/predict [moneda] - Análisis IA y Soportes
+*Comandos de Precios:*
+/price - Ver precios principales
+/coins - Monedas soportadas (28+)
+/chart [moneda] - Ver gráfico
+
+*Comandos de Blockchain:*
+/balance [XLM/SOL] [address] - Ver balance real
+/wallet [XLM/SOL] [address] - Últimas transacciones
+
+*Herramientas:*
 /portfolio - Gestionar tu inversión
-/help - Mostrar ayuda completa
+/predict [moneda] - Análisis IA
+/help - Ayuda completa
         """
         
         await update.message.reply_text(welcome_text, parse_mode='Markdown')
@@ -94,6 +106,19 @@ class TelegramHandlers:
                         'avalanche-2': 'AVAX',
                         'matic-network': 'MATIC',
                         'cosmos': 'ATOM',
+                        'algorand': 'ALGO',
+                        'dogecoin': 'DOGE',
+                        'shiba-inu': 'SHIB',
+                        'pepe': 'PEPE',
+                        'uniswap': 'UNI',
+                        'chainlink': 'LINK',
+                        'aave': 'AAVE',
+                        'tether': 'USDT',
+                        'usd-coin': 'USDC',
+                        'dai': 'DAI',
+                        'ripple': 'XRP',
+                        'litecoin': 'LTC',
+                        'binancecoin': 'BNB',
                         'acurast': 'ACU',
                     }
                     symbol = coin_to_symbol.get(coin, coin.upper())
@@ -114,7 +139,7 @@ class TelegramHandlers:
             
             if not price:
                 # Mostrar monedas disponibles
-                available_coins = "SOL, XLM, BTC, ETH, ADA, DOT, AVAX, MATIC, ATOM, DOGE, SHIB, UNI, LINK, ACU"
+                available_coins = "SOL, XLM, BTC, ETH, ADA, DOT, AVAX, MATIC, ATOM, ALGO, DOGE, SHIB, PEPE, UNI, LINK, AAVE, USDT, USDC, DAI, XRP, LTC, BNB, ACU"
                 await update.message.reply_text(
                     f"❌ Moneda no encontrada o sin datos de precio: {symbol}\n\n"
                     f"*Monedas disponibles:*\n{available_coins}",
@@ -138,7 +163,7 @@ class TelegramHandlers:
                 "`/alert SOL > 150`\n"
                 "`/alert XLM < 0.12`\n"
                 "`/alert SOL 10%`\n\n"
-                "*Monedas:* SOL, XLM, BTC, ETH",
+                "*Monedas:* SOL, XLM, BTC, ETH, ADA, DOT, AVAX, MATIC, ATOM, ALGO, DOGE, SHIB, PEPE, UNI, LINK, AAVE, USDT, USDC, DAI, XRP, LTC, BNB, ACU",
                 parse_mode='Markdown'
             )
             return
@@ -667,6 +692,151 @@ class TelegramHandlers:
         response += "_Nota: Esto no es consejo financiero._"
         
         await message.edit_text(response, parse_mode='Markdown')
+
+    async def balance_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Maneja el comando /balance [RED] [ADDRESS]"""
+        args = context.args
+        if len(args) < 2:
+            await update.message.reply_text(
+                "📝 *Uso:* `/balance [XLM/SOL] [DIRECCIÓN]`\n\n"
+                "*Ejemplo:* `/balance XLM G...`",
+                parse_mode='Markdown'
+            )
+            return
+
+        network = args[0].upper()
+        address = args[1]
+        
+        await update.message.reply_text(f"🔍 Consultando balance en {network}...")
+
+        try:
+            if network == 'XLM':
+                balance_data = await self.stellar_client.get_account_balance(address)
+                if balance_data:
+                    msg = f"💳 *Balance Stellar (XLM)*\n`{address[:10]}...`\n\n"
+                    for b in balance_data['balances']:
+                        asset = b['asset']
+                        msg += f"• *{asset}:* {b['balance']}\n"
+                    await update.message.reply_text(msg, parse_mode='Markdown')
+                else:
+                    await update.message.reply_text("❌ Cuenta no encontrada en Stellar.")
+            
+            elif network == 'SOL':
+                balance_data = await self.solana_client.get_account_balance(address)
+                if balance_data:
+                    msg = f"💳 *Balance Solana (SOL)*\n`{address[:10]}...`\n\n"
+                    msg += f"• *SOL:* {balance_data['balance_sol']:.4f}\n"
+                    msg += f"• *Lamports:* {balance_data['balance_lamports']}"
+                    await update.message.reply_text(msg, parse_mode='Markdown')
+                else:
+                    await update.message.reply_text("❌ Cuenta no encontrada en Solana.")
+            else:
+                await update.message.reply_text("❌ Red no soportada. Usa XLM o SOL.")
+        except Exception as e:
+            logger.error(f"Error en balance_command: {e}")
+            await update.message.reply_text("❌ Error al consultar el balance.")
+
+    async def wallet_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Maneja el comando /wallet [RED] [ADDRESS] - Últimas transacciones"""
+        args = context.args
+        if len(args) < 2:
+            await update.message.reply_text(
+                "📝 *Uso:* `/wallet [XLM/SOL] [DIRECCIÓN]`",
+                parse_mode='Markdown'
+            )
+            return
+
+        network = args[0].upper()
+        address = args[1]
+        
+        await update.message.reply_text(f"🔍 Consultando transacciones en {network}...")
+
+        try:
+            if network == 'XLM':
+                txs = await self.stellar_client.get_account_transactions(address, limit=5)
+                if txs:
+                    msg = f"📜 *Últimas transacciones XLM*\n`{address[:10]}...`\n\n"
+                    for tx in txs:
+                        status = "✅" if tx['successful'] else "❌"
+                        msg += f"{status} `{tx['hash'][:8]}...`\n"
+                        msg += f"📅 {tx['created_at']}\n\n"
+                    await update.message.reply_text(msg, parse_mode='Markdown')
+                else:
+                    await update.message.reply_text("❌ No se encontraron transacciones.")
+            
+            elif network == 'SOL':
+                txs = await self.solana_client.get_recent_transactions(address, limit=5)
+                if txs:
+                    msg = f"📜 *Últimas transacciones SOL*\n`{address[:10]}...`\n\n"
+                    for tx in txs:
+                        status = "❌" if tx['err'] else "✅"
+                        msg += f"{status} `{tx['signature'][:8]}...`\n"
+                        # msg += f"📅 Slot: {tx['slot']}\n\n"
+                    await update.message.reply_text(msg, parse_mode='Markdown')
+                else:
+                    await update.message.reply_text("❌ No se encontraron transacciones.")
+            else:
+                await update.message.reply_text("❌ Red no soportada.")
+        except Exception as e:
+            logger.error(f"Error en wallet_command: {e}")
+            await update.message.reply_text("❌ Error al consultar transacciones.")
+
+    async def watch_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Maneja el comando /watch [RED] [ADDRESS] - Monitorear cuenta"""
+        args = context.args
+        if len(args) < 2:
+            await update.message.reply_text(
+                "📝 *Uso:* `/watch [XLM/SOL] [DIRECCIÓN]`\n\n"
+                "*Ejemplo:* `/watch SOL G...`",
+                parse_mode='Markdown'
+            )
+            return
+
+        network = args[0].upper()
+        address = args[1]
+        chat_id = update.effective_chat.id
+
+        if network not in ['XLM', 'SOL']:
+            await update.message.reply_text("❌ Red no soportada. Usa XLM o SOL.")
+            return
+
+        try:
+            # Guardar en DB
+            await mongodb.watched_accounts.update_one(
+                {"address": address, "network": network},
+                {
+                    "$set": {
+                        "address": address,
+                        "network": network,
+                        "chat_id": chat_id,
+                        "added_at": datetime.utcnow()
+                    }
+                },
+                upsert=True
+            )
+
+            # Activar en el monitor inmediatamente si el servicio está disponible
+            if self.alert_service:
+                if network == 'XLM':
+                    await self.alert_service.stellar_monitor.add_account(address, chat_id)
+                else:
+                    await self.alert_service.solana_monitor.add_account(address, chat_id)
+                
+                await update.message.reply_text(
+                    f"👀 *Monitoreo activado*\n\n"
+                    f"Red: {network}\n"
+                    f"Cuenta: `{address[:10]}...`\n"
+                    f"Te notificaré cuando detecte nuevas transacciones.",
+                    parse_mode='Markdown'
+                )
+            else:
+                await update.message.reply_text(
+                    "✅ Cuenta guardada. El monitoreo se activará en el próximo reinicio del servicio."
+                )
+
+        except Exception as e:
+            logger.error(f"Error en watch_command: {e}")
+            await update.message.reply_text("❌ Error al activar el monitoreo.")
 
     async def callback_query_handler(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Maneja las llamadas de callback (botones)"""

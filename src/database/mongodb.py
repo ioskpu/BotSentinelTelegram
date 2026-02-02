@@ -23,6 +23,7 @@ class MongoDB:
             self.price_history = self.db.price_history
             self.portfolio = self.db.portfolio
             self.notifications = self.db.notifications
+            self.watched_accounts = self.db.watched_accounts
             
             logger.info("✅ MongoDB conectado exitosamente")
         except Exception as e:

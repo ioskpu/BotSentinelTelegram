@@ -7,11 +7,15 @@ from telegram import Bot
 from telegram.error import TelegramError
 from src.database.mongodb import mongodb
 from src.services.price_monitor import PriceMonitor
+from src.services.stellar.monitor import StellarMonitor
+from src.services.solana.monitor import SolanaMonitor
 from src.config.settings import settings
 
 class AlertService:
     def __init__(self, bot: Optional[Bot] = None):
         self.price_monitor = PriceMonitor()
+        self.stellar_monitor = StellarMonitor()
+        self.solana_monitor = SolanaMonitor()
         self.last_prices: Dict[str, float] = {}
         self.is_running = False
         self.bot = bot
@@ -26,9 +30,16 @@ class AlertService:
         self.is_running = True
         await self.price_monitor.start()
         
-        logger.info("🚀 Servicio de alertas iniciado")
+        # Iniciar monitores de blockchain
+        asyncio.create_task(self.stellar_monitor.start_monitoring(self.blockchain_callback))
+        asyncio.create_task(self.solana_monitor.start_monitoring(self.blockchain_callback))
         
-        # Bucle principal de verificación
+        # Cargar cuentas monitoreadas desde la DB
+        await self._load_watched_accounts()
+        
+        logger.info("🚀 Servicio de alertas y monitoreo blockchain iniciado")
+        
+        # Bucle principal de verificación de precios
         while self.is_running:
             try:
                 await self.check_alerts()
@@ -43,7 +54,59 @@ class AlertService:
         """Detiene el servicio de alertas"""
         self.is_running = False
         await self.price_monitor.stop()
+        self.stellar_monitor.stop_monitoring()
+        self.solana_monitor.stop_monitoring()
         logger.info("Servicio de alertas detenido")
+
+    async def blockchain_callback(self, network: str, address: str, chat_id: int, tx_data: Dict):
+        """Callback para notificar transacciones detectadas"""
+        if not self.bot:
+            return
+            
+        try:
+            msg = f"🔔 *NUEVA TRANSACCIÓN EN {network}*\n"
+            msg += f"📍 Cuenta: `{address[:10]}...{address[-10:]}`\n\n"
+            
+            if network == "STELLAR":
+                msg += f"📜 Hash: `{tx_data['hash'][:10]}...`\n"
+                msg += f"📅 Fecha: {tx_data['created_at']}\n"
+            else: # SOLANA
+                msg += f"📜 Firma: `{tx_data['signature'][:10]}...`\n"
+                status = "✅ Éxito" if not tx_data.get('err') else "❌ Error"
+                msg += f"📊 Estado: {status}\n"
+                
+            msg += f"\n🔗 [Ver en Explorador]({self._get_explorer_url(network, tx_data)})"
+            
+            await self.bot.send_message(
+                chat_id=chat_id,
+                text=msg,
+                parse_mode='Markdown',
+                disable_web_page_preview=True
+            )
+            logger.info(f"✅ Notificación de {network} enviada a {chat_id}")
+            
+        except Exception as e:
+            logger.error(f"Error en blockchain_callback: {e}")
+
+    def _get_explorer_url(self, network: str, tx_data: Dict) -> str:
+        if network == "STELLAR":
+            return f"https://stellar.expert/explorer/public/tx/{tx_data['hash']}"
+        else: # SOLANA
+            return f"https://solscan.io/tx/{tx_data['signature']}"
+
+    async def _load_watched_accounts(self):
+        """Carga las cuentas a monitorear desde la base de datos"""
+        try:
+            # Colección única para cuentas monitoreadas
+            accounts = await mongodb.watched_accounts.find({}).to_list(length=None)
+            for acc in accounts:
+                if acc['network'] == 'STELLAR':
+                    await self.stellar_monitor.add_account(acc['address'], acc['chat_id'])
+                elif acc['network'] == 'SOLANA':
+                    await self.solana_monitor.add_account(acc['address'], acc['chat_id'])
+            logger.info(f"✅ Cargadas {len(accounts)} cuentas de blockchain para monitoreo")
+        except Exception as e:
+            logger.error(f"Error cargando cuentas monitoreadas: {e}")
     
     async def check_alerts(self):
         """Verifica todas las alertas activas"""
