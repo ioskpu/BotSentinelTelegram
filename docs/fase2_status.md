@@ -24,14 +24,20 @@ Este documento registra el progreso de las tareas solicitadas para la expansión
 - [x] `/portfolio`: Cálculo de P&L real y valor actual.
 - [x] `/pdel`: Gestión de entradas.
 
-### 4. Infraestructura
-- [x] Despliegue en Fly.io corregido (Carga lazy de colecciones).
+### 4. Integración Blockchain (Web3)
+- [x] **Stellar (XLM):** Cliente Horizon, monitoreo de cuentas y comando `/sbalance`.
+- [x] **Solana (SOL):** Cliente RPC, soporte de tokens SPL y comando `/sobalance`.
+- [x] **Monitoreo Real-time:** Notificaciones automáticas de transacciones on-chain.
+
+### 5. Infraestructura
+- [x] Despliegue en Fly.io corregido.
 - [x] Conexión estable con MongoDB Atlas.
-- [x] Caching de precios para evitar rate limits de CoinGecko.
+- [x] Caching de precios para evitar rate limits.
+- [x] Dependencias actualizadas y optimizadas (Stellar, Solana, etc.).
 
 ---
 
-## 🔮 Próximos Pasos: Fase 3 (Web3)
-- [ ] Integración con Stellar Network (Horizon API).
-- [ ] Monitoreo de carteras on-chain.
+## 🔮 Próximos Pasos: Fase 3 (Whale Tracking & Advanced Web3)
 - [ ] Alertas de ballenas (Whale Tracking).
+- [ ] Dashboard web para monitoreo.
+- [ ] Integración con más redes (Ethereum/L2).
