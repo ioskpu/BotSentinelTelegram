@@ -9,16 +9,21 @@ from loguru import logger
 
 class ChartGenerator:
     @staticmethod
-    async def generate_price_chart(coin_id: str, days: int = 7) -> io.BytesIO:
+    async def generate_price_chart(coin_id: str, days: int = 7, price_monitor=None) -> io.BytesIO:
         """Genera un gráfico de precios históricos"""
         try:
-            # Obtener datos históricos
+            # Obtener datos históricos de DB
             cutoff_date = datetime.utcnow() - timedelta(days=days)
             
             history = await mongodb.price_history.find({
                 "coin_id": coin_id,
                 "timestamp": {"$gte": cutoff_date}
             }).sort("timestamp", 1).to_list(length=1000)
+            
+            # Si no hay datos en DB, intentar obtener de la API
+            if (not history or len(history) < 10) and price_monitor:
+                logger.info(f"Pocos datos en DB para gráfico de {coin_id}, consultando API...")
+                history = await price_monitor.get_historical_data(coin_id, days=days)
             
             if not history or len(history) < 2:
                 return None

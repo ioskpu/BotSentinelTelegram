@@ -35,10 +35,16 @@ class SmartAlerts:
     async def predict_price_movement(self, coin_id: str) -> Dict:
         """Predicción simple basada en medias móviles y RSI"""
         try:
+            # Intentar obtener de DB primero
             history = await mongodb.price_history.find({
                 "coin_id": coin_id,
                 "timestamp": {"$gte": datetime.utcnow() - timedelta(hours=48)}
             }).sort("timestamp", 1).to_list(length=200)
+            
+            # Si no hay suficiente en DB, pedir a la API
+            if len(history) < 14:
+                logger.info(f"Poco historial en DB para {coin_id}, consultando API...")
+                history = await self.price_monitor.get_historical_data(coin_id, days=2)
             
             if len(history) < 14:
                 return {"prediction": "neutral", "confidence": 0, "reason": "Datos insuficientes"}
@@ -88,20 +94,31 @@ class SmartAlerts:
     async def get_support_resistance(self, coin_id: str) -> Dict:
         """Calcula niveles de soporte y resistencia basados en el historial"""
         try:
+            # Intentar obtener de DB primero
             history = await mongodb.price_history.find({
                 "coin_id": coin_id,
                 "timestamp": {"$gte": datetime.utcnow() - timedelta(days=7)}
             }).sort("timestamp", 1).to_list(length=1000)
             
+            # Si no hay suficiente en DB, pedir a la API
             if len(history) < 20:
-                return {"support": None, "resistance": None}
+                history = await self.price_monitor.get_historical_data(coin_id, days=7)
+            
+            if len(history) < 20:
+                # Intentar obtener el precio actual al menos
+                current = await self.price_monitor.get_price_by_id(coin_id)
+                return {"support": None, "resistance": None, "current": current}
             
             prices = [h['price'] for h in history]
+            current = prices[-1]
+            
+            support = float(np.min(prices))
+            resistance = float(np.max(prices))
             
             return {
-                "support": min(prices),
-                "resistance": max(prices),
-                "current": prices[-1]
+                "support": support,
+                "resistance": resistance,
+                "current": current
             }
         except Exception as e:
             logger.error(f"Error calculando soporte/resistencia: {e}")

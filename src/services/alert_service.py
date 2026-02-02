@@ -236,7 +236,7 @@ class AlertService:
             
             for alert in alerts:
                 if alert['coin_id'] not in current_prices:
-                    price = await self.price_monitor._get_price_by_id(alert['coin_id'])
+                    price = await self.price_monitor.get_price_by_id(alert['coin_id'])
                     current_prices[alert['coin_id']] = price
                 
                 if current_prices[alert['coin_id']]:

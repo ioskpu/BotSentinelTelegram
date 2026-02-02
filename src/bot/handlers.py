@@ -94,6 +94,7 @@ class TelegramHandlers:
                         'avalanche-2': 'AVAX',
                         'matic-network': 'MATIC',
                         'cosmos': 'ATOM',
+                        'acurast': 'ACU',
                     }
                     symbol = coin_to_symbol.get(coin, coin.upper())
                     message += f"• *{symbol}:* ${price:,.4f}\n"
@@ -111,20 +112,20 @@ class TelegramHandlers:
             symbol = args[0].upper()
             price = await self.price_monitor.get_price_by_symbol(symbol)
             
-            if price:
-                await update.message.reply_text(
-                    f"💎 *{symbol}:* ${price:,.4f} USD",
-                    parse_mode='Markdown'
-                )
-            else:
+            if not price:
                 # Mostrar monedas disponibles
-                available_coins = "SOL, XLM, BTC, ETH, ADA, DOT, AVAX, MATIC, ATOM, DOGE, SHIB, UNI, LINK"
+                available_coins = "SOL, XLM, BTC, ETH, ADA, DOT, AVAX, MATIC, ATOM, DOGE, SHIB, UNI, LINK, ACU"
                 await update.message.reply_text(
-                    f"❌ Moneda no encontrada\n\n"
-                    f"*Monedas disponibles:*\n{available_coins}\n\n"
-                    f"Ejemplo: `/price ADA`",
+                    f"❌ Moneda no encontrada o sin datos de precio: {symbol}\n\n"
+                    f"*Monedas disponibles:*\n{available_coins}",
                     parse_mode='Markdown'
                 )
+                return
+
+            await update.message.reply_text(
+                f"💎 *{symbol}:* ${price:,.4f} USD",
+                parse_mode='Markdown'
+            )
     
     async def alert_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Maneja el comando /alert"""
@@ -153,7 +154,26 @@ class TelegramHandlers:
                 'SOL': ('solana', 'SOL'),
                 'XLM': ('stellar', 'XLM'),
                 'BTC': ('bitcoin', 'BTC'),
-                'ETH': ('ethereum', 'ETH')
+                'ETH': ('ethereum', 'ETH'),
+                'ADA': ('cardano', 'ADA'),
+                'DOT': ('polkadot', 'DOT'),
+                'AVAX': ('avalanche-2', 'AVAX'),
+                'MATIC': ('matic-network', 'MATIC'),
+                'ATOM': ('cosmos', 'ATOM'),
+                'ALGO': ('algorand', 'ALGO'),
+                'DOGE': ('dogecoin', 'DOGE'),
+                'SHIB': ('shiba-inu', 'SHIB'),
+                'PEPE': ('pepe', 'PEPE'),
+                'UNI': ('uniswap', 'UNI'),
+                'LINK': ('chainlink', 'LINK'),
+                'AAVE': ('aave', 'AAVE'),
+                'USDT': ('tether', 'USDT'),
+                'USDC': ('usd-coin', 'USDC'),
+                'DAI': ('dai', 'DAI'),
+                'XRP': ('ripple', 'XRP'),
+                'LTC': ('litecoin', 'LTC'),
+                'BNB': ('binancecoin', 'BNB'),
+                'ACU': ('acurast', 'ACU')
             }
             
             if symbol not in coin_map:
@@ -338,6 +358,9 @@ class TelegramHandlers:
 • USDC - USD Coin
 • DAI - Dai
 
+*Nuevas:*
+• ACU - Acurast
+
 📝 *Uso:* `/price [SÍMBOLO]`
 📝 *Ejemplo:* `/price AVAX`
 """
@@ -476,6 +499,7 @@ class TelegramHandlers:
             'XRP': 'ripple',
             'LTC': 'litecoin',
             'BNB': 'binancecoin',
+            'ACU': 'acurast'
         }
         
         coin_id = symbol_to_id.get(coin_symbol)
@@ -485,7 +509,7 @@ class TelegramHandlers:
         
         # Generar gráfico
         from src.services.chart_generator import ChartGenerator
-        chart_buffer = await ChartGenerator.generate_price_chart(coin_id, days)
+        chart_buffer = await ChartGenerator.generate_price_chart(coin_id, days, self.price_monitor)
         
         if chart_buffer:
             await update.message.reply_photo(
@@ -612,7 +636,7 @@ class TelegramHandlers:
             'ATOM': 'cosmos', 'ALGO': 'algorand', 'DOGE': 'dogecoin', 'SHIB': 'shiba-inu',
             'PEPE': 'pepe', 'UNI': 'uniswap', 'LINK': 'chainlink', 'AAVE': 'aave',
             'USDT': 'tether', 'USDC': 'usd-coin', 'DAI': 'dai', 'XRP': 'ripple',
-            'LTC': 'litecoin', 'BNB': 'binancecoin'
+            'LTC': 'litecoin', 'BNB': 'binancecoin', 'ACU': 'acurast'
         }
         
         coin_id = symbol_to_id.get(symbol)
