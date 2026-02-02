@@ -8,17 +8,21 @@ Si eres nuevo, estos son los comandos que más utilizarás:
 
 - `/start`: Inicia el bot y recibe un mensaje de bienvenida.
 - `/help`: Muestra la lista completa de comandos disponibles.
-- `/price`: Muestra los precios de las principales criptomonedas (SOL, XLM, BTC, ETH, ADA).
-- `/price [SÍMBOLO]`: Consulta el precio de una moneda específica (ej: `/price SOL`).
+- `/price`: Muestra los precios de las principales criptomonedas.
+- `/blockchain`: Ayuda específica para funciones de Stellar y Solana.
 
 ---
 
 ## 💰 Consulta de Precios y Mercado
 
-El bot obtiene datos en tiempo real de CoinGecko.
+El bot utiliza un sistema de **Cache Inteligente** y **Singleton** para garantizar datos rápidos y evitar bloqueos de API. Los precios se actualizan globalmente cada 60 segundos.
 
 - `/coins`: Lista todas las monedas soportadas por el bot (más de 28 activos).
-- `/trending`: Muestra las 7 monedas que son tendencia en este momento.
+- `/price`: Muestra los precios de las principales criptomonedas (SOL, XLM, BTC, ETH, ADA).
+- `/price [SÍMBOLO/NOMBRE]`: Consulta el precio de una moneda específica. 
+  - Soporta símbolos (`SOL`, `ACU`, `PEPE`) y nombres completos (`BITCOIN`, `STELLAR`).
+  - Si una moneda no responde temporalmente, el bot servirá el último precio conocido del cache.
+- `/trending`: Muestra las monedas que son tendencia en este momento.
 - `/chart [SÍMBOLO] [días]`: Genera un gráfico de precios (ej: `/chart SOL 7`).
 - `/convert [CANTIDAD] [DE] [A]`: Conversor de divisas (ej: `/convert 1 BTC USD`).
 

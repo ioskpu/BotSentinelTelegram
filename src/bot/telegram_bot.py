@@ -22,7 +22,11 @@ class CryptoTelegramBot:
             
             # Inicializar la aplicación (capa de red de PTB)
             await self.application.initialize()
-            logger.info("✅ Bot de Telegram inicializado")
+            
+            # Iniciar PriceMonitor de los handlers
+            await self.handlers.price_monitor.start()
+            
+            logger.info("✅ Bot de Telegram inicializado y PriceMonitor iniciado")
             return True
         except Exception as e:
             logger.error(f"❌ Error inicializando bot: {e}")
@@ -90,6 +94,10 @@ class CryptoTelegramBot:
     async def stop(self):
         """Detiene el bot"""
         try:
+            # Detener PriceMonitor
+            if self.handlers and self.handlers.price_monitor:
+                await self.handlers.price_monitor.stop()
+                
             if self.application:
                 if self.application.updater and self.application.updater.running:
                     await self.application.updater.stop()

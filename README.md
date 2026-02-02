@@ -95,8 +95,8 @@ chmod +x deploy/fly_deploy.sh
 
 ## 📚 Documentación Detallada
 
-- [� Guía de Usuario (Manual)](docs/user_guide.md): Instrucciones completas para el usuario final del bot en Telegram.
-- [�🛠️ Guía de Instalación y Setup](docs/setup.md): Paso a paso para MongoDB Atlas y Fly.io.
+- [📖 Guía de Usuario (Manual)](docs/user_guide.md): Instrucciones completas para el usuario final del bot en Telegram.
+- [🛠️ Guía de Instalación y Setup](docs/setup.md): Paso a paso para MongoDB Atlas y Fly.io.
 - [📂 Estructura del Proyecto](docs/project_structure.md): Descripción de cada archivo y carpeta.
 - [🏗️ Arquitectura](docs/architecture.md): Diagrama de flujo y componentes.
 

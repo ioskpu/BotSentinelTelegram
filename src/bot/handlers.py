@@ -85,72 +85,93 @@ class TelegramHandlers:
     
     async def price_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Maneja el comando /price"""
-        args = context.args
-        
-        if not args:
-            # Mostrar precios de las principales monedas
-            default_coins = ['solana', 'stellar', 'bitcoin', 'ethereum', 'cardano']
-            prices = await self.price_monitor.get_multiple_prices(default_coins)
+        try:
+            args = context.args
+            logger.info(f"Price command received with args: {args}")
             
-            message = "💰 *Precios principales:*\n\n"
-            for coin, price in prices.items():
-                if price:
-                    # Mapear ID a símbolo
-                    coin_to_symbol = {
-                        'solana': 'SOL',
-                        'stellar': 'XLM',
-                        'bitcoin': 'BTC',
-                        'ethereum': 'ETH',
-                        'cardano': 'ADA',
-                        'polkadot': 'DOT',
-                        'avalanche-2': 'AVAX',
-                        'matic-network': 'MATIC',
-                        'cosmos': 'ATOM',
-                        'algorand': 'ALGO',
-                        'dogecoin': 'DOGE',
-                        'shiba-inu': 'SHIB',
-                        'pepe': 'PEPE',
-                        'uniswap': 'UNI',
-                        'chainlink': 'LINK',
-                        'aave': 'AAVE',
-                        'tether': 'USDT',
-                        'usd-coin': 'USDC',
-                        'dai': 'DAI',
-                        'ripple': 'XRP',
-                        'litecoin': 'LTC',
-                        'binancecoin': 'BNB',
-                        'acurast': 'ACU',
-                    }
-                    symbol = coin_to_symbol.get(coin, coin.upper())
-                    message += f"• *{symbol}:* ${price:,.4f}\n"
-            
-            keyboard = [
-                [InlineKeyboardButton("🔄 Actualizar", callback_data="refresh_prices")],
-                [InlineKeyboardButton("🔔 Nueva Alerta", callback_data="new_alert")],
-                [InlineKeyboardButton("📈 Más monedas", callback_data="more_coins")]
-            ]
-            reply_markup = InlineKeyboardMarkup(keyboard)
-            
-            await update.message.reply_text(message, parse_mode='Markdown', reply_markup=reply_markup)
-        else:
-            # Buscar precio específico
-            symbol = args[0].upper()
-            price = await self.price_monitor.get_price_by_symbol(symbol)
-            
-            if not price:
-                # Mostrar monedas disponibles
-                available_coins = "SOL, XLM, BTC, ETH, ADA, DOT, AVAX, MATIC, ATOM, ALGO, DOGE, SHIB, PEPE, UNI, LINK, AAVE, USDT, USDC, DAI, XRP, LTC, BNB, ACU"
+            if not args:
+                # Mostrar precios de las principales monedas
+                default_coins = ['solana', 'stellar', 'bitcoin', 'ethereum', 'cardano']
+                logger.debug(f"Fetching multiple prices for: {default_coins}")
+                prices = await self.price_monitor.get_multiple_prices(default_coins)
+                
+                message = "💰 *Precios principales:*\n\n"
+                for coin, price in prices.items():
+                    if price:
+                        # Mapear ID a símbolo
+                        coin_to_symbol = {
+                            'solana': 'SOL',
+                            'stellar': 'XLM',
+                            'bitcoin': 'BTC',
+                            'ethereum': 'ETH',
+                            'cardano': 'ADA',
+                            'polkadot': 'DOT',
+                            'avalanche-2': 'AVAX',
+                            'matic-network': 'MATIC',
+                            'cosmos': 'ATOM',
+                            'algorand': 'ALGO',
+                            'dogecoin': 'DOGE',
+                            'shiba-inu': 'SHIB',
+                            'pepe': 'PEPE',
+                            'uniswap': 'UNI',
+                            'chainlink': 'LINK',
+                            'aave': 'AAVE',
+                            'tether': 'USDT',
+                            'usd-coin': 'USDC',
+                            'dai': 'DAI',
+                            'ripple': 'XRP',
+                            'litecoin': 'LTC',
+                            'binancecoin': 'BNB',
+                            'acurast': 'ACU',
+                        }
+                        symbol = coin_to_symbol.get(coin, coin.upper())
+                        message += f"• *{symbol}:* ${price:,.4f}\n"
+                
+                keyboard = [
+                    [InlineKeyboardButton("🔄 Actualizar", callback_data="refresh_prices")],
+                    [InlineKeyboardButton("🔔 Nueva Alerta", callback_data="new_alert")],
+                    [InlineKeyboardButton("📈 Más monedas", callback_data="more_coins")]
+                ]
+                reply_markup = InlineKeyboardMarkup(keyboard)
+                
+                await update.message.reply_text(message, parse_mode='Markdown', reply_markup=reply_markup)
+            else:
+                # Buscar precio específico
+                args_text = " ".join(args)
+                symbol = args[0].upper().strip()
+                logger.info(f"Price command detail - Args: '{args_text}', Parsed Symbol: '{symbol}'")
+                
+                # Obtener el coin_id para depuración
+                coin_id = self.price_monitor.symbol_to_id.get(symbol)
+                logger.debug(f"Mapping: {symbol} -> {coin_id}")
+                
+                price = await self.price_monitor.get_price_by_symbol(symbol)
+                
+                if price is None:
+                    # Mostrar monedas disponibles y depuración
+                    available_coins = "SOL, XLM, BTC, ETH, ADA, DOT, AVAX, MATIC, ATOM, ALGO, DOGE, SHIB, PEPE, UNI, LINK, AAVE, USDT, USDC, DAI, XRP, LTC, BNB, ACU"
+                    debug_info = f"\n\n(Debug: Symbol='{symbol}', ID='{coin_id}', Args='{args_text}')"
+                    await update.message.reply_text(
+                        f"❌ Moneda no encontrada o sin datos de precio: {symbol}{debug_info}\n\n"
+                        f"*Monedas disponibles:*\n{available_coins}",
+                        parse_mode='Markdown'
+                    )
+                    return
+
+                # Formatear precio según su valor
+                if price < 0.01:
+                    price_str = f"{price:.8f}"
+                else:
+                    price_str = f"{price:,.4f}"
+
+                logger.info(f"Successfully fetched price for {symbol}: {price}")
                 await update.message.reply_text(
-                    f"❌ Moneda no encontrada o sin datos de precio: {symbol}\n\n"
-                    f"*Monedas disponibles:*\n{available_coins}",
+                    f"💎 *{symbol}:* ${price_str} USD",
                     parse_mode='Markdown'
                 )
-                return
-
-            await update.message.reply_text(
-                f"💎 *{symbol}:* ${price:,.4f} USD",
-                parse_mode='Markdown'
-            )
+        except Exception as e:
+            logger.exception(f"Error in price_command: {e}")
+            await update.message.reply_text("❌ Ocurrió un error al obtener el precio. Por favor, intenta de nuevo más tarde.")
     
     async def alert_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Maneja el comando /alert"""

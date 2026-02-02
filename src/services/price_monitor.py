@@ -6,15 +6,34 @@ from loguru import logger
 from src.config.settings import settings
 
 class PriceMonitor:
+    _instance = None
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(PriceMonitor, cls).__new__(cls)
+            cls._instance._initialized = False
+        return cls._instance
+
     def __init__(self):
+        if self._initialized:
+            return
+            
         self.session: Optional[aiohttp.ClientSession] = None
         self.cache: Dict[str, float] = {}
+        self.last_update: Dict[str, datetime] = {}
+        self.global_last_update: Optional[datetime] = None
+        self.update_interval = 60  # Segundos entre actualizaciones globales
+        self._initialized = True
         self.symbol_to_id = {
             # Monedas principales
             'SOL': 'solana',
+            'SOLANA': 'solana',
             'XLM': 'stellar',
+            'STELLAR': 'stellar',
             'BTC': 'bitcoin',
+            'BITCOIN': 'bitcoin',
             'ETH': 'ethereum',
+            'ETHEREUM': 'ethereum',
             
             # Layer 1
             'AVAX': 'avalanche-2',
@@ -35,6 +54,7 @@ class PriceMonitor:
             
             # Stablecoins
             'USDT': 'tether',
+            'TETHER': 'tether',
             'USDC': 'usd-coin',
             'DAI': 'dai',
             
@@ -43,11 +63,22 @@ class PriceMonitor:
             'LTC': 'litecoin',
             'BNB': 'binancecoin',
             'ACU': 'acurast',
+            'ACURAST': 'acurast',
         }
         
     async def start(self):
-        """Inicia la sesión HTTP"""
-        self.session = aiohttp.ClientSession()
+        """Inicia la sesión HTTP con headers adecuados"""
+        if self.session and not self.session.closed:
+            return
+            
+        timeout = aiohttp.ClientTimeout(total=15)
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'application/json',
+            'Accept-Language': 'en-US,en;q=0.9'
+        }
+        self.session = aiohttp.ClientSession(timeout=timeout, headers=headers)
+        logger.info("✅ Sesión de PriceMonitor iniciada")
     
     async def stop(self):
         """Cierra la sesión HTTP"""
@@ -110,10 +141,34 @@ class PriceMonitor:
             return []
     
     async def get_price_by_id(self, coin_id: str) -> Optional[float]:
-        """Obtiene precio de CoinGecko"""
-        if not self.session:
+        """Obtiene precio de CoinGecko con sistema de cache inteligente"""
+        if not self.session or self.session.closed:
             await self.start()
         
+        coin_id = coin_id.lower().strip()
+        now = datetime.now()
+
+        # 1. Verificar si tenemos el precio en cache y si es reciente (< 60s)
+        if coin_id in self.cache:
+            last_upd = self.last_update.get(coin_id)
+            if last_upd and (now - last_upd).total_seconds() < self.update_interval:
+                logger.debug(f"Serving {coin_id} from cache (age: {(now - last_upd).total_seconds():.1f}s)")
+                return self.cache[coin_id]
+
+        # 2. Si no es reciente, intentar una actualización global si no se ha hecho recientemente
+        if not self.global_last_update or (now - self.global_last_update).total_seconds() > self.update_interval:
+            # Marcamos como actualizado incluso antes de empezar para evitar peticiones concurrentes duplicadas
+            self.global_last_update = now
+            logger.info(f"Cache expired or missing. Triggering global price refresh...")
+            all_ids = list(set(self.symbol_to_id.values()))
+            await self.get_multiple_prices(all_ids)
+            
+            # Si después de la actualización global tenemos el precio, devolverlo
+            if coin_id in self.cache:
+                return self.cache[coin_id]
+
+        # 3. Si por alguna razón no está en la actualización global (ID nuevo), pedirlo individualmente
+        # pero con cuidado de no saturar
         try:
             url = f"{settings.COINGECKO_API_URL}/simple/price"
             params = {
@@ -121,59 +176,63 @@ class PriceMonitor:
                 'vs_currencies': 'usd'
             }
             
-            logger.debug(f"Fetching price for {coin_id} from {url}")
-            async with self.session.get(url, params=params, timeout=10) as response:
+            logger.debug(f"Fallback request for single coin {coin_id}")
+            async with self.session.get(url, params=params) as response:
                 if response.status == 200:
                     data = await response.json()
-                    logger.debug(f"API Response for {coin_id}: {data}")
-                    price = data.get(coin_id, {}).get('usd')
-                    if price is not None:
+                    if coin_id in data and 'usd' in data[coin_id]:
+                        price = float(data[coin_id]['usd'])
                         self.cache[coin_id] = price
+                        self.last_update[coin_id] = now
                         return price
-                    else:
-                        logger.warning(f"Price for {coin_id} not found in response: {data}")
-                else:
-                    logger.warning(f"CoinGecko API error: {response.status} for {coin_id}")
-                    # Si falla, intentar recuperar de cache
-                    return self.cache.get(coin_id)
-        except Exception as e:
-            logger.error(f"Error fetching price for {coin_id}: {e}")
+                elif response.status == 429:
+                    logger.warning(f"Rate limit hit in fallback for {coin_id}")
+                
             return self.cache.get(coin_id)
-        
-        return None
-    
+        except Exception as e:
+            logger.error(f"Error in fallback price fetch for {coin_id}: {e}")
+            return self.cache.get(coin_id)
+
     async def get_multiple_prices(self, coin_ids: List[str] = None) -> Dict[str, Optional[float]]:
-        """Obtiene múltiples precios en una sola llamada"""
+        """Obtiene múltiples precios en una sola llamada y actualiza el cache"""
         if not coin_ids:
-            # Monedas por defecto si no se especifican
-            coin_ids = ['solana', 'stellar', 'bitcoin', 'ethereum', 
-                       'cardano', 'polkadot', 'avalanche-2']
+            coin_ids = list(set(self.symbol_to_id.values()))
         
-        if not self.session:
+        if not self.session or self.session.closed:
             await self.start()
         
+        now = datetime.now()
         try:
-            url = f"{settings.COINGECKO_API_URL}/simple/price"
-            params = {
-                'ids': ','.join(coin_ids),
-                'vs_currencies': 'usd'
-            }
+            # Dividir en grupos de 50 (límite razonable para CoinGecko simple/price)
+            chunk_size = 50
+            for i in range(0, len(coin_ids), chunk_size):
+                chunk = coin_ids[i:i + chunk_size]
+                url = f"{settings.COINGECKO_API_URL}/simple/price"
+                params = {
+                    'ids': ','.join(chunk),
+                    'vs_currencies': 'usd'
+                }
+                
+                async with self.session.get(url, params=params) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        for cid in chunk:
+                            if cid in data and 'usd' in data[cid]:
+                                price = float(data[cid]['usd'])
+                                self.cache[cid] = price
+                                self.last_update[cid] = now
+                        logger.info(f"Updated {len(data)} prices from CoinGecko")
+                    elif response.status == 429:
+                        logger.warning("Rate limit hit during multiple price fetch")
+                        break
+                    else:
+                        logger.error(f"Error fetching multiple prices: {response.status}")
             
-            async with self.session.get(url, params=params, timeout=10) as response:
-                if response.status == 200:
-                    data = await response.json()
-                    prices = {}
-                    for coin_id in coin_ids:
-                        price = data.get(coin_id, {}).get('usd')
-                        if price:
-                            self.cache[coin_id] = price
-                        prices[coin_id] = price
-                    return prices
+            self.global_last_update = now
+            return {cid: self.cache.get(cid) for cid in coin_ids}
         except Exception as e:
-            logger.error(f"Error fetching multiple prices: {e}")
-            return {coin_id: self.cache.get(coin_id) for coin_id in coin_ids}
-        
-        return {}
+            logger.error(f"Exception in multiple price fetch: {e}")
+            return {cid: self.cache.get(cid) for cid in coin_ids}
 
     async def get_trending_coins(self) -> List[Dict]:
         """Obtiene monedas en tendencia"""
