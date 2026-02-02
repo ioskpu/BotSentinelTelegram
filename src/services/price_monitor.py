@@ -71,6 +71,10 @@ class PriceMonitor:
             
         return await self.get_price_by_id(coin_id)
     
+    async def get_price_by_symbol(self, symbol: str) -> Optional[float]:
+        """Alias para get_price (mantenido por compatibilidad)"""
+        return await self.get_price(symbol)
+    
     async def get_historical_data(self, coin_id: str, days: int = 2) -> List[Dict]:
         """Obtiene datos históricos de precios desde CoinGecko"""
         if not self.session:

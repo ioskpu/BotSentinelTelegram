@@ -4,11 +4,14 @@ Crypto Sentinel es un asistente inteligente diseñado para el monitoreo y gesti�
 
 ---
 
-## 📍 Estado del Proyecto: Fase 2 (Completada) ✅
+## 📍 Estado del Proyecto: Fase 3 (Integración Web3 en Progreso) 🚀
 
-El proyecto ha completado su **Fase 2**, consolidándose como una herramienta robusta de análisis y gestión de portafolio cripto en producción.
+El proyecto ha entrado en su **Fase 3**, integrando capacidades avanzadas de Web3 y monitoreo on-chain.
 
 ### ¿Qué ofrece el Bot?
+- **Monitoreo On-Chain (Web3):**
+  - **Stellar (XLM):** Consulta de balances, historial de transacciones y monitoreo en tiempo real de cuentas.
+  - **Solana (SOL):** Soporte para SOL y tokens SPL, tracking de firmas y alertas de actividad.
 - **Monitoreo Expandido (28+ Monedas):** Seguimiento en tiempo real de Layer 1 (SOL, AVAX, MATIC), Memes (PEPE, SHIB), DeFi (UNI, LINK) y Stables (USDT, USDC).
 - **Gestión de Portafolio:** Seguimiento de inversiones con cálculo automático de ganancias/pérdidas (P&L) en tiempo real (`/portfolio`).
 - **Análisis Inteligente (IA & TA):**
@@ -17,27 +20,34 @@ El proyecto ha completado su **Fase 2**, consolidándose como una herramienta ro
   - Visualización de tendencias globales con datos de CoinGecko (`/trending`).
 - **Sistema de Alertas Avanzado:**
   - Alertas de precio y variaciones porcentuales.
-  - Almacenamiento de historial de precios para análisis visual.
+  - Monitoreo automático de transacciones blockchain para cuentas seguidas.
 - **Gráficos en Tiempo Real:** Generación de gráficos de evolución de precio directamente en Telegram (`/chart`).
 - **Infraestructura de Producción:**
-  - **Fly.io**: Despliegue en la nube con estrategias de "rolling update".
-  - **MongoDB Atlas**: Base de datos NoSQL para persistencia de usuarios, alertas y portafolios.
+  - **Fly.io**: Despliegue en la nube optimizado para Python 3.11+.
+  - **MongoDB Atlas**: Base de datos NoSQL para persistencia de usuarios, alertas, portafolios y cuentas monitoreadas.
   - **FastAPI**: Endpoints de salud y monitoreo de API.
 
 ---
 
 ## 🤖 Comandos Principales
 
+### Mercado y Análisis
 | Comando | Descripción |
 |---------|-------------|
 | `/price [moneda]` | Precio actual y variaciones (ej: `/price SOL`) |
-| `/coins` | Lista las 28+ monedas soportadas |
-| `/trending` | Top 7 monedas en tendencia mundial |
 | `/predict [moneda]` | Análisis técnico y predicción de movimiento |
-| `/portfolio` | Resumen de inversión y P&L total |
 | `/chart [moneda]` | Gráfico de precio de los últimos 7 días |
-| `/alert [condicion]` | Configurar alertas inteligentes |
-| `/convert [cant] [de] [a]` | Conversor de divisas y cripto |
+| `/trending` | Top 7 monedas en tendencia mundial |
+| `/portfolio` | Resumen de inversión y P&L total |
+
+### Web3 (Stellar & Solana)
+| Comando | Descripción |
+|---------|-------------|
+| `/sbalance [dir]` | Balances en Stellar (XLM/Assets) |
+| `/swatch [dir]` | Iniciar monitoreo on-chain de cuenta Stellar |
+| `/sobalance [dir]` | Balance de SOL en Solana |
+| `/sotokens [dir]` | Lista tokens SPL en Solana |
+| `/blockchain` | Ayuda completa de comandos Web3 |
 
 ---
 
@@ -85,14 +95,15 @@ chmod +x deploy/fly_deploy.sh
 
 ## 📚 Documentación Detallada
 
-- [🛠️ Guía de Instalación y Setup](docs/setup.md): Paso a paso para MongoDB Atlas y Fly.io.
+- [� Guía de Usuario (Manual)](docs/user_guide.md): Instrucciones completas para el usuario final del bot en Telegram.
+- [�🛠️ Guía de Instalación y Setup](docs/setup.md): Paso a paso para MongoDB Atlas y Fly.io.
 - [📂 Estructura del Proyecto](docs/project_structure.md): Descripción de cada archivo y carpeta.
 - [🏗️ Arquitectura](docs/architecture.md): Diagrama de flujo y componentes.
 
 ---
 
-## 🛠️ Próximamente (Fase 3: Integración Web3)
-- **Stellar Network**: Integración para consultas de saldo real y transferencias.
-- **Notificaciones Push**: Alertas de movimientos de ballenas (Whale Alerts).
+## 🛠️ Próximamente (Fase 3: Avanzado)
+- **Alertas de Ballenas (Whale Tracking)**: Notificaciones automáticas de grandes movimientos.
 - **Dashboard Web**: Panel administrativo para usuarios avanzados.
-- **Social Listening**: Análisis de sentimiento en Twitter/X para monedas meme.
+- **Social Listening**: Análisis de sentimiento en Twitter/X.
+- **Soporte Multi-red**: Ethereum y redes Layer 2.

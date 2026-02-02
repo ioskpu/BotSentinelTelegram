@@ -1,4 +1,29 @@
-¡Perfecto! Vamos directamente a la Fase 2. En esta fase, integraremos Stellar y Solana de manera más profunda, yendo más allá de solo precios para incluir transacciones, balances y alertas de blockchain.
+## 🌐 Comandos Blockchain (Web3)
+
+### Stellar (XLM)
+| Comando | Parámetros | Descripción |
+|---------|------------|-------------|
+| `/sbalance` | `[dirección]` | Consulta balances (XLM y otros activos) |
+| `/swatch` | `[dirección]` | Inicia monitoreo de transacciones en tiempo real |
+| `/sunwatch` | `[dirección]` | Detiene el monitoreo de la cuenta |
+| `/stransactions` | `[dirección]` | Muestra las últimas 10 transacciones |
+
+### Solana (SOL)
+| Comando | Parámetros | Descripción |
+|---------|------------|-------------|
+| `/sobalance` | `[dirección]` | Consulta balance de SOL |
+| `/sotokens` | `[dirección]` | Lista tokens SPL y sus balances |
+| `/sowatch` | `[dirección]` | Inicia monitoreo de transacciones en tiempo real |
+| `/sounwatch` | `[dirección]` | Detiene el monitoreo de la cuenta |
+| `/sotransactions` | `[dirección]` | Muestra las últimas firmas de transacciones |
+
+| Comando | Descripción |
+|---------|-------------|
+| `/blockchain` | Ayuda general y guía de comandos Web3 |
+
+---
+
+¡Perfecto! Vamos directamente a la Fase 2....2. En esta fase, integraremos Stellar y Solana de manera más profunda, yendo más allá de solo precios para incluir transacciones, balances y alertas de blockchain.
 
 Objetivos de la Fase 2:
 Monitoreo de transacciones de Stellar y Solana en tiempo real.
