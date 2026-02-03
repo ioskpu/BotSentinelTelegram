@@ -52,12 +52,38 @@ export interface PriceHistory {
 
 export interface Portfolio {
   id: string
-  userId: string
-  totalValue: number
-  totalProfitLoss: number
-  totalProfitLossPercent: number
-  holdings: PortfolioHolding[]
-  updatedAt: string
+  coin_id: string
+  coin_symbol: string
+  coin_name: string
+  amount: number
+  buy_price?: number
+  buy_date?: string
+  notes?: string
+  current_price?: number
+  current_value?: number
+  profit_loss?: number
+  profit_loss_percent?: number
+  created_at: string
+  updated_at: string
+}
+
+export interface PortfolioSummary {
+  total_value: number
+  total_invested: number
+  total_profit_loss: number
+  total_profit_loss_percent: number
+  positions_count: number
+  positions: Portfolio[]
+}
+
+export interface CreatePositionRequest {
+  coin_id: string
+  coin_symbol: string
+  coin_name: string
+  amount: number
+  buy_price?: number
+  buy_date?: string
+  notes?: string
 }
 
 export interface PortfolioHolding {

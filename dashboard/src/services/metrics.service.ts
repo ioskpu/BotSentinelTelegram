@@ -2,20 +2,20 @@ import api, { endpoints } from '@/config/api'
 import { Price, PriceHistory, DashboardStats } from '@/types'
 
 export interface MarketOverview {
-  totalMarketCap: number
-  totalVolume24h: number
-  btcDominance: number
-  ethDominance: number
-  marketCapChange24h: number
+  total_market_cap: number
+  total_volume_24h: number
+  btc_dominance: number
+  eth_dominance: number
+  market_cap_change_24h: number
 }
 
 export interface TopMover {
-  coinId: string
+  coin_id: string
   symbol: string
   name: string
   price: number
-  change24h: number
-  volume24h: number
+  change_24h: number
+  volume_24h: number
   image?: string
 }
 
@@ -52,23 +52,23 @@ export const metricsService = {
   },
 
   async getAlertMetrics(): Promise<{
-    total: number
-    active: number
-    triggeredToday: number
-    triggeredWeek: number
-    byType: Record<string, number>
-    byCoin: { coin: string; count: number }[]
+    total_alerts: number
+    active_alerts: number
+    triggered_today: number
+    triggered_week: number
+    by_type: Record<string, number>
+    by_coin: { coin: string; count: number }[]
   }> {
     const response = await api.get(endpoints.metrics.alerts)
     return response.data
   },
 
   async getPortfolioMetrics(): Promise<{
-    totalValue: number
-    totalInvested: number
-    totalPnl: number
-    pnlPercentage: number
-    allocation: { coinId: string; symbol: string; value: number; percentage: number }[]
+    total_value: number
+    total_invested: number
+    total_pnl: number
+    pnl_percentage: number
+    allocation: { coin_id: string; symbol: string; value: number; percentage: number }[]
   }> {
     const response = await api.get(endpoints.metrics.portfolio)
     return response.data

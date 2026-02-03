@@ -1,4 +1,4 @@
-import api, { endpoints } from '../config/api'
+import api, { endpoints } from '@/config/api'
 
 export interface Transaction {
   id: string
@@ -34,3 +34,5 @@ export const transactionService = {
     return response.data.transactions
   }
 }
+
+export default transactionService

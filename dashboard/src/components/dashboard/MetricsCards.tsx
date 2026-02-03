@@ -36,8 +36,8 @@ export default function MetricsCards() {
   const metrics: MetricCard[] = [
     {
       title: 'Total Market Cap',
-      value: `$${((marketOverview?.totalMarketCap || 0) / 1e12).toFixed(2)}T`,
-      change: marketOverview?.marketCapChange24h,
+      value: `$${((marketOverview?.total_market_cap || 0) / 1e12).toFixed(2)}T`,
+      change: marketOverview?.market_cap_change_24h,
       changeLabel: '24h',
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -45,28 +45,28 @@ export default function MetricsCards() {
         </svg>
       ),
       color: 'accent',
-      trend: (marketOverview?.marketCapChange24h || 0) >= 0 ? 'up' : 'down',
+      trend: (marketOverview?.market_cap_change_24h || 0) >= 0 ? 'up' : 'down',
       isLoading: loadingMarket,
       isError: errorMarket,
     },
     {
       title: 'Portfolio Value',
-      value: `$${(portfolioMetrics?.totalValue || 0).toLocaleString()}`,
-      change: portfolioMetrics?.pnlPercentage,
+      value: `$${(portfolioMetrics?.total_value || 0).toLocaleString()}`,
+      change: portfolioMetrics?.pnl_percentage,
       changeLabel: 'P&L',
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
       ),
-      color: (portfolioMetrics?.pnlPercentage || 0) >= 0 ? 'gain' : 'loss',
-      trend: (portfolioMetrics?.pnlPercentage || 0) >= 0 ? 'up' : 'down',
+      color: (portfolioMetrics?.pnl_percentage || 0) >= 0 ? 'gain' : 'loss',
+      trend: (portfolioMetrics?.pnl_percentage || 0) >= 0 ? 'up' : 'down',
       isLoading: loadingPortfolio,
       isError: errorPortfolio,
     },
     {
       title: 'Active Alerts',
-      value: alertMetrics?.active || 0,
+      value: alertMetrics?.active_alerts || 0,
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
@@ -79,7 +79,7 @@ export default function MetricsCards() {
     },
     {
       title: 'Triggered Today',
-      value: alertMetrics?.triggeredToday || 0,
+      value: alertMetrics?.triggered_today || 0,
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -92,21 +92,21 @@ export default function MetricsCards() {
     },
     {
       title: 'BTC Dominance',
-      value: `${(marketOverview?.btcDominance || 0).toFixed(1)}%`,
+      value: `${(marketOverview?.btc_dominance || 0).toFixed(1)}%`,
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
         </svg>
       ),
-      color: 'accent',
+      color: 'blue',
       trend: 'neutral',
       isLoading: loadingMarket,
       isError: errorMarket,
     },
     {
       title: '24h Volume',
-      value: `$${((marketOverview?.totalVolume24h || 0) / 1e9).toFixed(1)}B`,
+      value: `$${((marketOverview?.total_volume_24h || 0) / 1e9).toFixed(1)}B`,
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
