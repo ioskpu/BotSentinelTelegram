@@ -53,7 +53,7 @@ services:
       - MONGODB_URI=mongodb://mongodb:27017
       - MONGODB_DB_NAME=${MONGODB_DB_NAME:-crypto_sentinel}
       - REDIS_URL=redis://redis:6379
-      - JWT_SECRET=${JWT_SECRET}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-dev_secret_key_123}
       - DEBUG=${DEBUG:-false}
       - PYTHONPATH=/app
       - API_MODE=true

@@ -57,13 +57,21 @@ def verify_telegram_hash(auth_data: dict, bot_token: str) -> bool:
     if not check_hash:
         return False
 
-    data_check_arr = sorted([f"{k}={v}" for k, v in auth_data.items()])
+    # Filter out None values and sort fields
+    data_check_arr = sorted([
+        f"{k}={v}" for k, v in auth_data.items() 
+        if v is not None
+    ])
     data_check_string = "\n".join(data_check_arr)
 
     secret_key = hashlib.sha256(bot_token.encode()).digest()
     hmac_hash = hmac.new(secret_key, data_check_string.encode(), hashlib.sha256).hexdigest()
 
-    return hmac.compare_digest(hmac_hash, check_hash)
+    result = hmac.compare_digest(hmac_hash, check_hash)
+    if not result:
+        logger.debug(f"Hash mismatch. Data string: {data_check_string}")
+    
+    return result
 
 
 async def get_current_user(

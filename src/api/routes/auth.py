@@ -27,7 +27,13 @@ async def login_with_telegram(auth_data: TelegramAuthData, request: Request):
     auth_dict = auth_data.model_dump()
     auth_date = auth_dict.get("auth_date", 0)
     
+    # Masked token for logging
+    token = settings.TELEGRAM_BOT_TOKEN
+    masked_token = f"{token[:5]}...{token[-5:]}" if len(token) > 10 else "***"
+    logger.info(f"Attempting login for user {auth_data.id} with token {masked_token}")
+    
     if datetime.utcnow().timestamp() - auth_date > 86400:
+        logger.warning(f"Auth data expired for user {auth_data.id}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Authentication data expired",
@@ -35,6 +41,7 @@ async def login_with_telegram(auth_data: TelegramAuthData, request: Request):
     
     hash_value = auth_dict.pop("hash")
     if not verify_telegram_hash({**auth_dict, "hash": hash_value}, settings.TELEGRAM_BOT_TOKEN):
+        logger.error(f"Invalid hash for user {auth_data.id}. Check if TELEGRAM_BOT_TOKEN is correct.")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid authentication hash",

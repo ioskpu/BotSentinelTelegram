@@ -1,14 +1,4 @@
-# Stage 1: Build Frontend
-FROM node:20-alpine AS frontend-builder
-WORKDIR /app/dashboard
-COPY dashboard/package*.json ./
-RUN npm ci --legacy-peer-deps
-COPY dashboard/ .
-# Inject production API URL if needed during build
-ENV VITE_API_URL=/api/v1/dashboard
-RUN npm run build
-
-# Stage 2: Backend and Production Image
+# Backend only Dockerfile for Fly.io
 FROM python:3.11-slim
 
 WORKDIR /app
@@ -26,9 +16,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copiar código de la aplicación
 COPY . .
-
-# Copiar frontend construido desde el Stage 1
-COPY --from=frontend-builder /app/dashboard/dist ./dashboard/dist
 
 # Crear usuario no-root para seguridad
 RUN useradd -m -u 1000 flyuser && chown -R flyuser:flyuser /app
