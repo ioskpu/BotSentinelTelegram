@@ -1,0 +1,51 @@
+app = "crypto-sentinel-dashboard"
+primary_region = "lax"
+
+[build]
+  dockerfile = "dashboard/Dockerfile"
+
+[env]
+  NODE_ENV = "production"
+
+[deploy]
+  strategy = "rolling"
+
+[[services]]
+  internal_port = 80
+  protocol = "tcp"
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+  
+  [services.concurrency]
+    type = "connections"
+    hard_limit = 100
+    soft_limit = 80
+  
+  [[services.ports]]
+    handlers = ["http"]
+    port = 80
+    force_https = true
+  
+  [[services.ports]]
+    handlers = ["tls", "http"]
+    port = 443
+
+  [[services.http_checks]]
+    interval = 10000
+    timeout = 2000
+    method = "GET"
+    path = "/health"
+    protocol = "http"
+
+[http_service]
+  internal_port = 80
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory_mb = 256

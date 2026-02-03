@@ -29,6 +29,12 @@ class Settings(BaseSettings):
     # Redis (para cache y workers)
     REDIS_URL: Optional[str] = "redis://localhost:6379"
     
+    # JWT Configuration
+    JWT_SECRET_KEY: str = "your-secret-key-change-in-production"
+    JWT_ALGORITHM: str = "HS256"
+    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+    
     # Modo debug e entorno
     DEBUG: bool = False
     ENVIRONMENT: str = "development"

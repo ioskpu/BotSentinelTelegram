@@ -25,6 +25,11 @@ class MongoDB:
             self.notifications = self.db.notifications
             self.watched_accounts = self.db.watched_accounts
             
+            # Web dashboard collections
+            self.web_users = self.db.web_users
+            self.sessions = self.db.sessions
+            self.activity_logs = self.db.activity_logs
+            
             logger.info("✅ MongoDB conectado exitosamente")
         except Exception as e:
             logger.error(f"❌ Error conectando a MongoDB: {e}")
