@@ -2,7 +2,6 @@ import { useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
-import { User } from '../types'
 import wsService from '../config/websocket'
 import { toast } from '../store/toastStore'
 import { authService } from '../services/auth.service'
@@ -20,7 +19,7 @@ interface TelegramAuthData {
 export function useAuth() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const { token, setAuth, logout: storeLogout, isAuthenticated } = useAuthStore()
+  const { setAuth, logout: storeLogout, isAuthenticated } = useAuthStore()
 
   const { data: user, isLoading: isLoadingUser } = useQuery({
     queryKey: ['user'],

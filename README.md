@@ -25,7 +25,31 @@ El proyecto ha entrado en su **Fase 3**, integrando capacidades avanzadas de Web
 - **Infraestructura de Producción:**
   - **Fly.io**: Despliegue en la nube optimizado para Python 3.11+.
   - **MongoDB Atlas**: Base de datos NoSQL para persistencia de usuarios, alertas, portafolios y cuentas monitoreadas.
-  - **FastAPI**: Endpoints de salud y monitoreo de API.
+  - **FastAPI**: Backend robusto que sirve la API del Dashboard y archivos estáticos.
+  - **React (Vite)**: Dashboard moderno para visualización de métricas, gestión de alertas y portafolio.
+
+---
+
+## 🖥️ Dashboard Web
+
+El proyecto incluye un dashboard web completo para gestionar tu cuenta de forma visual:
+
+### Características
+- **Métricas de Mercado**: Resumen global de Market Cap, Dominancia de BTC y Volúmenes.
+- **Gestión de Alertas**: Crea, edita y visualiza tus alertas de precio activas.
+- **Visualización de Portafolio**: Gráficos y tablas detalladas de tus posiciones y P&L.
+- **Actividad en Vivo**: Feed de transacciones y alertas disparadas en tiempo real vía WebSockets.
+
+### Ejecución y Desarrollo
+```bash
+# Frontend (Dashboard)
+cd dashboard
+npm install
+npm run dev
+
+# Backend (API)
+python src/main.py
+```
 
 ---
 

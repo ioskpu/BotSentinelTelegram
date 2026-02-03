@@ -1,15 +1,29 @@
+import React, { Suspense, lazy } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from './store/authStore'
 import Layout from './components/layout/Layout'
-import Dashboard from './pages/Dashboard'
-import Alerts from './pages/Alerts'
-import Portfolio from './pages/Portfolio'
-import Transactions from './pages/Transactions'
-import Settings from './pages/Settings'
-import Login from './pages/Login'
-import Register from './pages/Register'
-import About from './pages/About'
 import ToastContainer from './components/ui/ToastContainer'
+import { Skeleton } from './components/ui/Skeleton'
+
+// Lazy loading de páginas
+const Dashboard = lazy(() => import('./pages/Dashboard'))
+const Alerts = lazy(() => import('./pages/Alerts'))
+const Portfolio = lazy(() => import('./pages/Portfolio'))
+const Transactions = lazy(() => import('./pages/Transactions'))
+const Settings = lazy(() => import('./pages/Settings'))
+const Login = lazy(() => import('./pages/Login'))
+const Register = lazy(() => import('./pages/Register'))
+const About = lazy(() => import('./pages/About'))
+
+const PageLoader = () => (
+  <div className="p-8">
+    <Skeleton className="w-full h-64 mb-8" />
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <Skeleton className="w-full h-48" />
+      <Skeleton className="w-full h-48" />
+    </div>
+  </div>
+)
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuthStore()
@@ -23,7 +37,7 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 
 function App() {
   return (
-    <>
+    <Suspense fallback={<PageLoader />}>
       <Routes>
         {/* Public routes */}
         <Route path="/about" element={<About />} />
@@ -54,7 +68,7 @@ function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <ToastContainer />
-    </>
+    </Suspense>
   )
 }
 

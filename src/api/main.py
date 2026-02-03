@@ -57,6 +57,19 @@ def create_app():
     app.include_router(users_router, prefix=dashboard_api_prefix, tags=["dashboard-users"])
     app.include_router(metrics_router, prefix=dashboard_api_prefix, tags=["dashboard-metrics"])
     
+    # Static files for dashboard frontend
+    from fastapi.staticfiles import StaticFiles
+    import os
+    
+    # Path to frontend build files
+    frontend_path = os.path.join(os.getcwd(), "dashboard/dist")
+    
+    if os.path.exists(frontend_path):
+        app.mount("/", StaticFiles(directory=frontend_path, html=True), name="static")
+        logger.info(f"Mounted frontend from {frontend_path}")
+    else:
+        logger.warning(f"Frontend path {frontend_path} not found. Dashboard will not be served.")
+    
     # WebSocket endpoint for dashboard
     @app.websocket("/ws/dashboard")
     async def dashboard_websocket(websocket: WebSocket):
