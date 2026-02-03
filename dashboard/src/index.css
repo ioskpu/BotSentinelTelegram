@@ -133,7 +133,92 @@
     @apply bg-gradient-to-r from-crypto-accent to-crypto-gain bg-clip-text text-transparent;
   }
 
+  .text-gradient-purple {
+    @apply bg-gradient-to-r from-crypto-purple to-crypto-accent bg-clip-text text-transparent;
+  }
+
   .border-gradient {
     border-image: linear-gradient(to right, #00d9ff, #00ff88) 1;
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out forwards;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-out forwards;
+  }
+
+  .animate-slide-down {
+    animation: slideDown 0.2s ease-out forwards;
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.2s ease-out forwards;
+  }
+
+  .animate-pulse-glow {
+    animation: pulseGlow 2s ease-in-out infinite;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes scaleIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  @keyframes pulseGlow {
+    0%, 100% { box-shadow: 0 0 5px rgba(0, 217, 255, 0.3); }
+    50% { box-shadow: 0 0 20px rgba(0, 217, 255, 0.6); }
+  }
+
+  /* Glassmorphism effect */
+  .glass {
+    @apply bg-crypto-bg-secondary/80 backdrop-blur-lg;
+  }
+
+  /* Gradient borders */
+  .gradient-border {
+    position: relative;
+  }
+
+  .gradient-border::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, #00d9ff, #8b5cf6, #00ff88);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+  }
+
+  /* Hover glow effects */
+  .hover-glow:hover {
+    box-shadow: 0 0 20px rgba(0, 217, 255, 0.3);
+  }
+
+  .hover-glow-purple:hover {
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+  }
+
+  .hover-glow-gain:hover {
+    box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
   }
 }

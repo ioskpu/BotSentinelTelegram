@@ -1,10 +1,14 @@
 import { useState } from 'react'
 import { useAuth } from '../../hooks/useAuth'
 import { useAlertStore } from '../../store/alertStore'
+import { useTheme } from '../../context/ThemeContext'
+import { useWebSocket } from '../../context/WebSocketContext'
 
 export default function Header() {
   const { user, logout } = useAuth()
   const { unreadCount, triggeredAlerts, markAllAsRead } = useAlertStore()
+  const { theme, toggleTheme } = useTheme()
+  const { isConnected } = useWebSocket()
   const [showNotifications, setShowNotifications] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
 
@@ -12,9 +16,33 @@ export default function Header() {
     <header className="h-16 bg-crypto-bg-secondary border-b border-crypto-border flex items-center justify-between px-6">
       <div className="flex items-center gap-4">
         <h2 className="text-xl font-semibold text-crypto-text">Dashboard</h2>
+        <div className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-xs ${
+          isConnected ? 'bg-crypto-gain/20 text-crypto-gain' : 'bg-crypto-loss/20 text-crypto-loss'
+        }`}>
+          <div className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-crypto-gain animate-pulse' : 'bg-crypto-loss'}`} />
+          {isConnected ? 'Live' : 'Offline'}
+        </div>
       </div>
 
       <div className="flex items-center gap-4">
+        {/* Theme Toggle */}
+        <button
+          onClick={toggleTheme}
+          className="p-2 rounded-lg hover:bg-crypto-bg-tertiary transition-colors"
+          title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+        >
+          {theme === 'dark' ? (
+            <svg className="w-5 h-5 text-crypto-text-secondary hover:text-crypto-accent transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+          ) : (
+            <svg className="w-5 h-5 text-crypto-text-secondary hover:text-crypto-purple transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+            </svg>
+          )}
+        </button>
+
+        {/* Notifications */}
         <div className="relative">
           <button
             onClick={() => setShowNotifications(!showNotifications)}
