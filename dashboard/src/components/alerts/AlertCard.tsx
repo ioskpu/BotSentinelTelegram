@@ -1,3 +1,4 @@
+import React from 'react'
 import { Alert } from '../../types'
 
 interface AlertCardProps {
@@ -7,14 +8,14 @@ interface AlertCardProps {
   isDeleting?: boolean
 }
 
-const typeLabels: Record<Alert['type'], string> = {
+const typeLabels: Record<Alert['alert_type'], string> = {
   price_above: 'Price Above',
   price_below: 'Price Below',
   percent_change: 'Percent Change',
   volume_spike: 'Volume Spike',
 }
 
-const typeIcons: Record<Alert['type'], JSX.Element> = {
+const typeIcons: Record<Alert['alert_type'], React.ReactElement> = {
   price_above: (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
@@ -38,55 +39,54 @@ const typeIcons: Record<Alert['type'], JSX.Element> = {
 }
 
 export default function AlertCard({ alert, onToggle, onDelete, isDeleting }: AlertCardProps) {
-  const formatValue = (value: number, type: Alert['type']) => {
+  const isTriggered = !!alert.triggered_at
+
+  const formatValue = (value: number, type: Alert['alert_type']) => {
     if (type === 'percent_change') {
       return `${value > 0 ? '+' : ''}${value}%`
+    }
+    if (type === 'volume_spike') {
+      return `${value}x`
     }
     return `$${value.toLocaleString()}`
   }
 
   return (
-    <div className={`card transition-all ${alert.isTriggered ? 'border-crypto-gain' : ''}`}>
+    <div className={`card transition-all ${isTriggered ? 'border-crypto-gain' : ''}`}>
       <div className="flex items-start justify-between">
         <div className="flex items-start gap-4">
           <div className={`p-3 rounded-lg ${
-            alert.isTriggered 
+            isTriggered 
               ? 'bg-crypto-gain/20 text-crypto-gain' 
-              : alert.isActive 
+              : alert.is_active 
                 ? 'bg-crypto-accent/20 text-crypto-accent'
                 : 'bg-crypto-bg-tertiary text-crypto-text-muted'
           }`}>
-            {typeIcons[alert.type]}
+            {typeIcons[alert.alert_type]}
           </div>
 
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="font-mono text-lg font-bold">{alert.symbol}</span>
+              <span className="font-mono text-lg font-bold">{alert.coin_symbol}</span>
               <span className={`badge ${
-                alert.isTriggered 
+                isTriggered 
                   ? 'badge-gain' 
-                  : alert.isActive 
+                  : alert.is_active 
                     ? 'badge-neutral' 
                     : 'bg-crypto-bg-tertiary text-crypto-text-muted'
               }`}>
-                {alert.isTriggered ? 'Triggered' : alert.isActive ? 'Active' : 'Paused'}
+                {isTriggered ? 'Triggered' : alert.is_active ? 'Active' : 'Paused'}
               </span>
             </div>
             
             <p className="text-sm text-crypto-text-secondary mb-2">
-              {typeLabels[alert.type]}: {formatValue(alert.targetValue, alert.type)}
+              {typeLabels[alert.alert_type]}: {formatValue(alert.threshold, alert.alert_type)}
             </p>
 
-            {alert.currentValue && (
-              <p className="text-sm text-crypto-text-muted">
-                Current: {formatValue(alert.currentValue, alert.type)}
-              </p>
-            )}
-
             <p className="text-xs text-crypto-text-muted mt-2">
-              Created {new Date(alert.createdAt).toLocaleDateString()}
-              {alert.triggeredAt && (
-                <> • Triggered {new Date(alert.triggeredAt).toLocaleString()}</>
+              Created {new Date(alert.created_at).toLocaleDateString()}
+              {alert.triggered_at && (
+                <> • Triggered {new Date(alert.triggered_at).toLocaleString()}</>
               )}
             </p>
           </div>
@@ -96,13 +96,13 @@ export default function AlertCard({ alert, onToggle, onDelete, isDeleting }: Ale
           <button
             onClick={onToggle}
             className={`p-2 rounded-lg transition-colors ${
-              alert.isActive
+              alert.is_active
                 ? 'bg-crypto-gain/20 text-crypto-gain hover:bg-crypto-gain/30'
                 : 'bg-crypto-bg-tertiary text-crypto-text-muted hover:bg-crypto-border'
             }`}
-            title={alert.isActive ? 'Pause alert' : 'Activate alert'}
+            title={alert.is_active ? 'Pause alert' : 'Activate alert'}
           >
-            {alert.isActive ? (
+            {alert.is_active ? (
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>

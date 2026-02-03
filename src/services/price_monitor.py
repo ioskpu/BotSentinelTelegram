@@ -20,6 +20,7 @@ class PriceMonitor:
             
         self.session: Optional[aiohttp.ClientSession] = None
         self.cache: Dict[str, float] = {}
+        self.volume_cache: Dict[str, float] = {}
         self.last_update: Dict[str, datetime] = {}
         self.global_last_update: Optional[datetime] = None
         self.update_interval = 60  # Segundos entre actualizaciones globales
@@ -173,7 +174,8 @@ class PriceMonitor:
             url = f"{settings.COINGECKO_API_URL}/simple/price"
             params = {
                 'ids': coin_id,
-                'vs_currencies': 'usd'
+                'vs_currencies': 'usd',
+                'include_24hr_vol': 'true'
             }
             
             logger.debug(f"Fallback request for single coin {coin_id}")
@@ -183,6 +185,8 @@ class PriceMonitor:
                     if coin_id in data and 'usd' in data[coin_id]:
                         price = float(data[coin_id]['usd'])
                         self.cache[coin_id] = price
+                        if 'usd_24h_vol' in data[coin_id]:
+                            self.volume_cache[coin_id] = float(data[coin_id]['usd_24h_vol'])
                         self.last_update[coin_id] = now
                         return price
                 elif response.status == 429:
@@ -210,7 +214,8 @@ class PriceMonitor:
                 url = f"{settings.COINGECKO_API_URL}/simple/price"
                 params = {
                     'ids': ','.join(chunk),
-                    'vs_currencies': 'usd'
+                    'vs_currencies': 'usd',
+                    'include_24hr_vol': 'true'
                 }
                 
                 async with self.session.get(url, params=params) as response:
@@ -220,8 +225,10 @@ class PriceMonitor:
                             if cid in data and 'usd' in data[cid]:
                                 price = float(data[cid]['usd'])
                                 self.cache[cid] = price
+                                if 'usd_24h_vol' in data[cid]:
+                                    self.volume_cache[cid] = float(data[cid]['usd_24h_vol'])
                                 self.last_update[cid] = now
-                        logger.info(f"Updated {len(data)} prices from CoinGecko")
+                        logger.info(f"Updated {len(data)} prices and volumes from CoinGecko")
                     elif response.status == 429:
                         logger.warning("Rate limit hit during multiple price fetch")
                         break

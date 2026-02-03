@@ -6,14 +6,14 @@ from pydantic import BaseModel, Field
 class AlertCreate(BaseModel):
     coin_id: str
     coin_symbol: str
-    alert_type: Literal["price_above", "price_below", "percent_change"]
+    alert_type: Literal["price_above", "price_below", "percent_change", "volume_spike"]
     threshold: float = Field(..., gt=0)
 
 
 class AlertUpdate(BaseModel):
     coin_id: Optional[str] = None
     coin_symbol: Optional[str] = None
-    alert_type: Optional[Literal["price_above", "price_below", "percent_change"]] = None
+    alert_type: Optional[Literal["price_above", "price_below", "percent_change", "volume_spike"]] = None
     threshold: Optional[float] = Field(None, gt=0)
     is_active: Optional[bool] = None
 

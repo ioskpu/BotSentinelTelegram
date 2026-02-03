@@ -22,8 +22,12 @@ class MongoDB:
             self.alerts = self.db.alerts
             self.price_history = self.db.price_history
             self.portfolio = self.db.portfolio
+            self.portfolio_history = self.db.portfolio_history
+            self.transactions = self.db.transactions
             self.notifications = self.db.notifications
             self.watched_accounts = self.db.watched_accounts
+            self.cache = self.db.cache
+            self.coins = self.db.coins
             
             # Web dashboard collections
             self.web_users = self.db.web_users

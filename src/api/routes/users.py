@@ -57,7 +57,7 @@ class UserStatsResponse(BaseModel):
 
 @router.get("/profile", response_model=UserProfileResponse)
 async def get_user_profile(current_user: dict = Depends(get_current_user)):
-    user = await mongodb.db.web_users.find_one(
+    user = await mongodb.users.find_one(
         {"telegram_id": current_user["telegram_id"]}
     )
     
@@ -67,8 +67,8 @@ async def get_user_profile(current_user: dict = Depends(get_current_user)):
             detail="User not found"
         )
     
-    alert_counts = await mongodb.db.alerts.aggregate([
-        {"$match": {"chat_id": current_user["telegram_id"]}},
+    alert_counts = await mongodb.alerts.aggregate([
+        {"$match": {"user_id": current_user["_id"]}},
         {"$group": {
             "_id": None,
             "total": {"$sum": 1},
@@ -105,43 +105,26 @@ async def get_user_profile(current_user: dict = Depends(get_current_user)):
     )
 
 
-@router.put("/profile", response_model=UserProfileResponse)
+@router.patch("/profile", response_model=UserProfileResponse)
 async def update_user_profile(
     profile_update: UserProfileUpdate,
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user),
 ):
-    update_data = {
-        k: v for k, v in profile_update.model_dump().items() 
-        if v is not None
-    }
-    update_data["updated_at"] = datetime.utcnow()
+    update_data = {k: v for k, v in profile_update.model_dump().items() if v is not None}
     
-    result = await mongodb.db.web_users.update_one(
-        {"telegram_id": current_user["telegram_id"]},
-        {"$set": update_data}
-    )
-    
-    if result.matched_count == 0:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
+    if update_data:
+        await mongodb.users.update_one(
+            {"_id": current_user["_id"]},
+            {"$set": update_data}
         )
     
-    await mongodb.db.activity_logs.insert_one({
-        "user_telegram_id": current_user["telegram_id"],
-        "action": "profile_update",
-        "details": {"fields_updated": list(update_data.keys())},
-        "created_at": datetime.utcnow(),
-    })
-    
-    logger.info(f"User {current_user['telegram_id']} updated profile")
-    
+    # Return updated profile
     return await get_user_profile(current_user)
 
 
 @router.get("/stats", response_model=UserStatsResponse)
 async def get_user_stats(current_user: dict = Depends(get_current_user)):
-    user = await mongodb.db.web_users.find_one(
+    user = await mongodb.users.find_one(
         {"telegram_id": current_user["telegram_id"]}
     )
     
@@ -151,17 +134,17 @@ async def get_user_stats(current_user: dict = Depends(get_current_user)):
             detail="User not found"
         )
     
-    total_alerts = await mongodb.db.alerts.count_documents(
-        {"chat_id": current_user["telegram_id"]}
+    total_alerts = await mongodb.alerts.count_documents(
+        {"user_id": current_user["_id"]}
     )
     
-    triggered_alerts = await mongodb.db.alerts.count_documents({
-        "chat_id": current_user["telegram_id"],
-        "triggered": True
+    triggered_alerts = await mongodb.alerts.count_documents({
+        "user_id": current_user["_id"],
+        "triggered_at": {"$ne": None}
     })
     
-    portfolio_items = await mongodb.db.portfolio.find(
-        {"user_telegram_id": current_user["telegram_id"]}
+    portfolio_items = await mongodb.portfolio.find(
+        {"user_id": current_user["_id"]}
     ).to_list(100)
     
     portfolio_value = sum(
@@ -169,8 +152,8 @@ async def get_user_stats(current_user: dict = Depends(get_current_user)):
         for item in portfolio_items
     )
     
-    last_activity = await mongodb.db.activity_logs.find_one(
-        {"user_telegram_id": current_user["telegram_id"]},
+    last_activity = await mongodb.activity_logs.find_one(
+        {"user_id": current_user["_id"]},
         sort=[("created_at", -1)]
     )
     
@@ -188,11 +171,11 @@ async def get_user_stats(current_user: dict = Depends(get_current_user)):
 async def delete_user_account(current_user: dict = Depends(get_current_user)):
     telegram_id = current_user["telegram_id"]
     
-    await mongodb.db.sessions.delete_many({"user_telegram_id": telegram_id})
-    await mongodb.db.portfolio.delete_many({"user_telegram_id": telegram_id})
-    await mongodb.db.activity_logs.delete_many({"user_telegram_id": telegram_id})
+    await mongodb.sessions.delete_many({"user_telegram_id": telegram_id})
+    await mongodb.portfolio.delete_many({"user_telegram_id": telegram_id})
+    await mongodb.activity_logs.delete_many({"user_telegram_id": telegram_id})
     
-    await mongodb.db.web_users.update_one(
+    await mongodb.web_users.update_one(
         {"telegram_id": telegram_id},
         {"$set": {"is_active": False, "deleted_at": datetime.utcnow()}}
     )

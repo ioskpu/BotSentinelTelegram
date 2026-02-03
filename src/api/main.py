@@ -46,17 +46,20 @@ def create_app():
     
     # Include routers
     app.include_router(health.router, prefix="/api/v1", tags=["health"])
-    app.include_router(auth_router, prefix="/api/v1", tags=["auth"])
-    app.include_router(alerts_router, prefix="/api/v1", tags=["alerts"])
-    app.include_router(prices_router, prefix="/api/v1", tags=["prices"])
-    app.include_router(portfolio_router, prefix="/api/v1", tags=["portfolio"])
-    app.include_router(dashboard_router, prefix="/api/v1", tags=["dashboard"])
-    app.include_router(users_router, prefix="/api/v1", tags=["users"])
-    app.include_router(metrics_router, prefix="/api/v1", tags=["metrics"])
     
-    # WebSocket endpoint
-    @app.websocket("/ws")
-    async def websocket_route(websocket: WebSocket):
+    # Dashboard API integration (v1/dashboard/*)
+    dashboard_api_prefix = "/api/v1/dashboard"
+    app.include_router(auth_router, prefix=dashboard_api_prefix, tags=["dashboard-auth"])
+    app.include_router(alerts_router, prefix=dashboard_api_prefix, tags=["dashboard-alerts"])
+    app.include_router(prices_router, prefix=dashboard_api_prefix, tags=["dashboard-prices"])
+    app.include_router(portfolio_router, prefix=dashboard_api_prefix, tags=["dashboard-portfolio"])
+    app.include_router(dashboard_router, prefix=dashboard_api_prefix, tags=["dashboard-main"])
+    app.include_router(users_router, prefix=dashboard_api_prefix, tags=["dashboard-users"])
+    app.include_router(metrics_router, prefix=dashboard_api_prefix, tags=["dashboard-metrics"])
+    
+    # WebSocket endpoint for dashboard
+    @app.websocket("/ws/dashboard")
+    async def dashboard_websocket(websocket: WebSocket):
         await websocket_endpoint(websocket)
     
     # WebSocket status endpoint

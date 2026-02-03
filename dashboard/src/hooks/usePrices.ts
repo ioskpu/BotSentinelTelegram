@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
 import { useEffect, useState, useCallback } from 'react'
-import api, { endpoints } from '../config/api'
 import wsService from '../config/websocket'
-import { Price, PriceHistory, ApiResponse, WebSocketMessage } from '../types'
+import { Price, WebSocketMessage } from '../types'
+import { metricsService } from '../services/metrics.service'
 
 export function usePrices(symbols?: string[]) {
   const [realtimePrices, setRealtimePrices] = useState<Map<string, Price>>(new Map())
@@ -14,11 +14,7 @@ export function usePrices(symbols?: string[]) {
     refetch,
   } = useQuery({
     queryKey: ['prices', symbols],
-    queryFn: async () => {
-      const params = symbols ? `?symbols=${symbols.join(',')}` : ''
-      const response = await api.get<ApiResponse<Price[]>>(`${endpoints.prices.list}${params}`)
-      return response.data.data
-    },
+    queryFn: () => metricsService.getCurrentPrices(symbols),
     staleTime: 1000 * 30,
   })
 
@@ -82,8 +78,8 @@ export function usePrice(symbol: string) {
   } = useQuery({
     queryKey: ['price', symbol],
     queryFn: async () => {
-      const response = await api.get<ApiResponse<Price>>(endpoints.prices.get(symbol))
-      return response.data.data
+      const prices = await metricsService.getCurrentPrices([symbol])
+      return prices[0] || null
     },
     enabled: !!symbol,
     staleTime: 1000 * 30,
@@ -123,16 +119,11 @@ export function usePrice(symbol: string) {
 
 export function usePriceHistory(
   symbol: string,
-  timeframe: PriceHistory['timeframe'] = '24h'
+  timeframe: string = '7d'
 ) {
   return useQuery({
     queryKey: ['priceHistory', symbol, timeframe],
-    queryFn: async () => {
-      const response = await api.get<ApiResponse<PriceHistory>>(
-        `${endpoints.prices.history(symbol)}?timeframe=${timeframe}`
-      )
-      return response.data.data
-    },
+    queryFn: () => metricsService.getPriceHistory(symbol, parseInt(timeframe)),
     enabled: !!symbol,
     staleTime: 1000 * 60,
   })
@@ -142,10 +133,12 @@ export function useSearchPrices(query: string) {
   return useQuery({
     queryKey: ['searchPrices', query],
     queryFn: async () => {
-      const response = await api.get<ApiResponse<Price[]>>(
-        `${endpoints.prices.search}?q=${encodeURIComponent(query)}`
+      // For now, use metricsService if it has search, or api directly
+      const response = await metricsService.getCurrentPrices() // Placeholder if no search
+      return response.filter(p => 
+        p.symbol.toLowerCase().includes(query.toLowerCase()) || 
+        p.name?.toLowerCase().includes(query.toLowerCase())
       )
-      return response.data.data
     },
     enabled: query.length >= 2,
     staleTime: 1000 * 60,

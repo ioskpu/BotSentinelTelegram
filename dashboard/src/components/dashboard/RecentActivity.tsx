@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
-import api, { endpoints } from '../../config/api'
-import { Activity, ApiResponse } from '../../types'
+import { activityService } from '@/services/activity.service'
+import { Activity } from '@/types'
+import { Skeleton } from '@/components/ui/Skeleton'
 
 const activityIcons: Record<Activity['type'], JSX.Element> = {
   alert_triggered: (
@@ -31,37 +32,33 @@ const activityIcons: Record<Activity['type'], JSX.Element> = {
 }
 
 export default function RecentActivity() {
-  const { data: activities, isLoading } = useQuery({
+  const { data: activities, isLoading, isError } = useQuery({
     queryKey: ['activity'],
-    queryFn: async () => {
-      const response = await api.get<ApiResponse<Activity[]>>(endpoints.dashboard.activity)
-      return response.data.data
-    },
+    queryFn: activityService.getRecentActivity,
+    refetchInterval: 300000, // Background sync cada 5 minutos
   })
-
-  if (isLoading) {
-    return (
-      <div className="card">
-        <h3 className="text-lg font-semibold mb-4">Recent Activity</h3>
-        <div className="space-y-4">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="flex items-center gap-4 animate-pulse">
-              <div className="w-10 h-10 rounded-full bg-crypto-bg-tertiary" />
-              <div className="flex-1 space-y-2">
-                <div className="h-4 bg-crypto-bg-tertiary rounded w-3/4" />
-                <div className="h-3 bg-crypto-bg-tertiary rounded w-1/2" />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    )
-  }
 
   return (
     <div className="card">
       <h3 className="text-lg font-semibold mb-4">Recent Activity</h3>
-      {!activities || activities.length === 0 ? (
+      
+      {isLoading ? (
+        <div className="space-y-4">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="flex items-center gap-4">
+              <Skeleton className="w-10 h-10 rounded-lg" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-4 w-3/4 rounded" />
+                <Skeleton className="h-3 w-1/2 rounded" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : isError ? (
+        <div className="text-center py-8 text-crypto-loss opacity-70">
+          <p>Error loading activity</p>
+        </div>
+      ) : !activities || activities.length === 0 ? (
         <div className="text-center py-8 text-crypto-text-muted">
           No recent activity
         </div>

@@ -1,42 +1,29 @@
 export interface User {
-  id: string
-  telegramId: number
-  username: string
-  firstName?: string
-  lastName?: string
-  photoUrl?: string
-  isPremium: boolean
-  createdAt: string
-  lastActiveAt: string
+  telegram_id: number
+  username?: string
+  first_name: string
+  last_name?: string
+  photo_url?: string
+  created_at: string
+  last_login: string
 }
 
 export interface Alert {
   id: string
-  userId: string
-  symbol: string
-  type: 'price_above' | 'price_below' | 'percent_change' | 'volume_spike'
-  condition: AlertCondition
-  targetValue: number
-  currentValue?: number
-  isActive: boolean
-  isTriggered: boolean
-  triggeredAt?: string
-  createdAt: string
-  updatedAt: string
-  message?: string
-}
-
-export interface AlertCondition {
-  operator: 'gt' | 'lt' | 'gte' | 'lte' | 'eq'
-  value: number
-  timeframe?: string
+  coin_id: string
+  coin_symbol: string
+  alert_type: 'price_above' | 'price_below' | 'percent_change' | 'volume_spike'
+  threshold: number
+  is_active: boolean
+  created_at: string
+  triggered_at?: string
 }
 
 export interface CreateAlertRequest {
-  symbol: string
-  type: Alert['type']
-  targetValue: number
-  condition?: Partial<AlertCondition>
+  coin_id: string
+  coin_symbol: string
+  alert_type: Alert['alert_type']
+  threshold: number
 }
 
 export interface Price {

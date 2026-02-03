@@ -71,7 +71,7 @@ class PortfolioMetrics(BaseModel):
 
 @router.get("/market/overview", response_model=MarketOverview)
 async def get_market_overview():
-    cached = await mongodb.db.cache.find_one({"key": "market_overview"})
+    cached = await mongodb.cache.find_one({"key": "market_overview"})
     
     if cached and cached.get("expires_at", datetime.min) > datetime.utcnow():
         return MarketOverview(**cached["data"])
@@ -91,7 +91,7 @@ async def get_top_movers(
     limit: int = Query(default=10, le=50),
     sort: str = Query(default="gainers", regex="^(gainers|losers|volume)$")
 ):
-    cached = await mongodb.db.cache.find_one({"key": f"top_movers_{sort}"})
+    cached = await mongodb.cache.find_one({"key": f"top_movers_{sort}"})
     
     if cached and cached.get("expires_at", datetime.min) > datetime.utcnow():
         return cached["data"][:limit]
@@ -124,7 +124,7 @@ async def get_price_history(
     days: int = Query(default=7, le=365),
     currency: str = Query(default="usd"),
 ):
-    history = await mongodb.db.price_history.find({
+    history = await mongodb.price_history.find({
         "coin_id": coin_id,
         "timestamp": {"$gte": datetime.utcnow() - timedelta(days=days)}
     }).sort("timestamp", 1).to_list(1000)
@@ -150,7 +150,7 @@ async def get_price_history(
             for i in range(days * 24, 0, -1)
         ]
     
-    coin_info = await mongodb.db.coins.find_one({"coin_id": coin_id})
+    coin_info = await mongodb.coins.find_one({"coin_id": coin_id})
     
     return PriceHistoryResponse(
         coin_id=coin_id,
@@ -167,36 +167,34 @@ async def get_price_history(
 
 @router.get("/alerts", response_model=AlertMetrics)
 async def get_alert_metrics(current_user: dict = Depends(get_current_user)):
-    telegram_id = current_user["telegram_id"]
+    user_id = current_user["_id"]
     now = datetime.utcnow()
     today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
     week_start = today_start - timedelta(days=7)
     
-    total = await mongodb.db.alerts.count_documents({"chat_id": telegram_id})
-    active = await mongodb.db.alerts.count_documents({
-        "chat_id": telegram_id,
+    total = await mongodb.alerts.count_documents({"user_id": user_id})
+    active = await mongodb.alerts.count_documents({
+        "user_id": user_id,
         "is_active": True
     })
     
-    triggered_today = await mongodb.db.alerts.count_documents({
-        "chat_id": telegram_id,
-        "triggered": True,
+    triggered_today = await mongodb.alerts.count_documents({
+        "user_id": user_id,
         "triggered_at": {"$gte": today_start}
     })
     
-    triggered_week = await mongodb.db.alerts.count_documents({
-        "chat_id": telegram_id,
-        "triggered": True,
+    triggered_week = await mongodb.alerts.count_documents({
+        "user_id": user_id,
         "triggered_at": {"$gte": week_start}
     })
     
-    by_type = await mongodb.db.alerts.aggregate([
-        {"$match": {"chat_id": telegram_id}},
+    by_type = await mongodb.alerts.aggregate([
+        {"$match": {"user_id": user_id}},
         {"$group": {"_id": "$alert_type", "count": {"$sum": 1}}}
     ]).to_list(20)
     
-    by_coin = await mongodb.db.alerts.aggregate([
-        {"$match": {"chat_id": telegram_id}},
+    by_coin = await mongodb.alerts.aggregate([
+        {"$match": {"user_id": user_id}},
         {"$group": {"_id": "$coin_symbol", "count": {"$sum": 1}}},
         {"$sort": {"count": -1}},
         {"$limit": 10}
@@ -214,10 +212,10 @@ async def get_alert_metrics(current_user: dict = Depends(get_current_user)):
 
 @router.get("/portfolio", response_model=PortfolioMetrics)
 async def get_portfolio_metrics(current_user: dict = Depends(get_current_user)):
-    telegram_id = current_user["telegram_id"]
+    user_id = current_user["_id"]
     
-    holdings = await mongodb.db.portfolio.find(
-        {"user_telegram_id": telegram_id}
+    holdings = await mongodb.portfolio.find(
+        {"user_id": user_id}
     ).to_list(100)
     
     if not holdings:
@@ -249,14 +247,14 @@ async def get_portfolio_metrics(current_user: dict = Depends(get_current_user)):
         total_invested += invested
         
         allocations.append({
-            "coin_id": h["coin_id"],
+            "coin_id": h.get("coin_id", "unknown"),
             "symbol": h["coin_symbol"],
             "value": value,
             "percentage": 0,
         })
         
         performers.append({
-            "coin_id": h["coin_id"],
+            "coin_id": h.get("coin_id", "unknown"),
             "symbol": h["coin_symbol"],
             "pnl": pnl,
             "pnl_percentage": pnl_pct,
@@ -270,8 +268,8 @@ async def get_portfolio_metrics(current_user: dict = Depends(get_current_user)):
     total_pnl = total_value - total_invested
     pnl_percentage = (total_pnl / total_invested * 100) if total_invested > 0 else 0
     
-    history = await mongodb.db.portfolio_history.find({
-        "user_telegram_id": telegram_id,
+    history = await mongodb.portfolio_history.find({
+        "user_id": user_id,
         "timestamp": {"$gte": datetime.utcnow() - timedelta(days=30)}
     }).sort("timestamp", 1).to_list(100)
     
@@ -298,12 +296,12 @@ async def get_transaction_metrics(
     telegram_id = current_user["telegram_id"]
     start_date = datetime.utcnow() - timedelta(days=days)
     
-    transactions = await mongodb.db.transactions.find({
+    transactions = await mongodb.transactions.find({
         "user_telegram_id": telegram_id,
         "timestamp": {"$gte": start_date}
     }).sort("timestamp", -1).to_list(100)
     
-    daily_stats = await mongodb.db.transactions.aggregate([
+    daily_stats = await mongodb.transactions.aggregate([
         {
             "$match": {
                 "user_telegram_id": telegram_id,

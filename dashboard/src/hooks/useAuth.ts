@@ -1,10 +1,11 @@
 import { useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
-import api, { endpoints } from '../config/api'
 import { useAuthStore } from '../store/authStore'
-import { User, ApiResponse } from '../types'
+import { User } from '../types'
 import wsService from '../config/websocket'
+import { toast } from '../store/toastStore'
+import { authService } from '../services/auth.service'
 
 interface TelegramAuthData {
   id: number
@@ -23,35 +24,40 @@ export function useAuth() {
 
   const { data: user, isLoading: isLoadingUser } = useQuery({
     queryKey: ['user'],
-    queryFn: async () => {
-      const response = await api.get<ApiResponse<User>>(endpoints.auth.me)
-      return response.data.data
-    },
+    queryFn: () => authService.getCurrentUser(),
     enabled: isAuthenticated,
     staleTime: 1000 * 60 * 5,
   })
 
   const loginMutation = useMutation({
-    mutationFn: async (authData: TelegramAuthData) => {
-      const response = await api.post<ApiResponse<{ user: User; token: string }>>(
-        endpoints.auth.login,
-        authData
-      )
-      return response.data.data
+    mutationFn: (authData: TelegramAuthData) => authService.loginWithTelegram(authData),
+    onSuccess: async (data) => {
+      // After login, we have the token, now fetch the user profile
+      try {
+        // We set the token first so the getCurrentUser call can use it
+        // Or we pass it explicitly if the interceptor isn't ready yet
+        const userProfile = await authService.getCurrentUser()
+        
+        setAuth(userProfile, data.access_token)
+        wsService.connect()
+        queryClient.setQueryData(['user'], userProfile)
+        toast.success(`Welcome back, ${userProfile.first_name}!`)
+        navigate('/')
+      } catch (error) {
+        console.error('Error fetching user after login:', error)
+        toast.error('Failed to fetch user profile')
+      }
     },
-    onSuccess: (data) => {
-      setAuth(data.user, data.token)
-      wsService.connect()
-      queryClient.setQueryData(['user'], data.user)
-      navigate('/')
-    },
+    onError: (error) => {
+      console.error('Login error:', error)
+      toast.error('Login failed. Please try again.')
+    }
   })
 
   const logoutMutation = useMutation({
-    mutationFn: async () => {
-      if (token) {
-        await api.post(endpoints.auth.logout)
-      }
+    mutationFn: () => authService.logout(),
+    onSuccess: () => {
+      toast.info('Logged out successfully')
     },
     onSettled: () => {
       wsService.disconnect()

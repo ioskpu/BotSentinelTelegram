@@ -7,21 +7,21 @@ from src.api.schemas.prices import DashboardStats, ActivityItem
 from src.api.middleware.auth import get_current_user
 from src.api.routes.prices import fetch_coingecko_prices, SUPPORTED_COINS
 
-router = APIRouter(prefix="/dashboard", tags=["dashboard"])
+router = APIRouter(prefix="", tags=["dashboard"])
 
 
 @router.get("/stats", response_model=DashboardStats)
 async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
     telegram_id = current_user["telegram_id"]
     
-    total_users = await mongodb.db.web_users.count_documents({})
+    total_users = await mongodb.web_users.count_documents({})
     
     active_alerts = await mongodb.alerts.count_documents({
-        "user_telegram_id": telegram_id,
+        "user_id": current_user["_id"],
         "is_active": True
     })
     
-    cursor = mongodb.portfolio.find({"user_telegram_id": telegram_id})
+    cursor = mongodb.portfolio.find({"user_id": current_user["_id"]})
     positions = await cursor.to_list(length=100)
     
     total_portfolio_value = 0
@@ -56,8 +56,8 @@ async def get_recent_activity(
     current_user: dict = Depends(get_current_user),
     limit: int = Query(20, ge=1, le=100),
 ):
-    cursor = mongodb.db.activity_logs.find({
-        "user_telegram_id": current_user["telegram_id"]
+    cursor = mongodb.activity_logs.find({
+        "user_id": current_user["_id"]
     }).sort("created_at", -1).limit(limit)
     
     activities = await cursor.to_list(length=limit)

@@ -241,6 +241,9 @@ class TelegramHandlers:
             elif '%' in condition:
                 alert_type = 'percent_change'
                 parsed_threshold = float(condition.replace('%', ''))
+            elif 'x' in condition.lower():
+                alert_type = 'volume_spike'
+                parsed_threshold = float(condition.lower().replace('x', ''))
             elif threshold:
                 # Formato: /alert SOL > 150
                 if condition == '>':
@@ -263,6 +266,7 @@ class TelegramHandlers:
             # Crear alerta
             alert_data = Alert(
                 user_id=user['_id'],
+                user_telegram_id=user['telegram_id'],
                 coin_id=coin_id,
                 coin_symbol=coin_symbol,
                 alert_type=alert_type,

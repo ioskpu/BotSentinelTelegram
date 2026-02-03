@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import api from '@/config/api'
+import api, { endpoints } from '@/config/api'
+import { Skeleton } from '@/components/ui/Skeleton'
 
 interface Transaction {
   id: string
@@ -16,14 +17,15 @@ interface Transaction {
 export default function Transactions() {
   const [filter, setFilter] = useState<string>('all')
 
-  const { data: transactions, isLoading } = useQuery({
+  const { data: transactions, isLoading, isError } = useQuery({
     queryKey: ['transactions', filter],
     queryFn: async () => {
-      const response = await api.get('/v1/metrics/transactions', {
+      const response = await api.get(endpoints.metrics.transactions, {
         params: { type: filter !== 'all' ? filter : undefined }
       })
       return response.data.transactions as Transaction[]
     },
+    refetchInterval: 300000, // Poll every 5 minutes
   })
 
   const getTypeColor = (type: Transaction['type']) => {
@@ -69,8 +71,32 @@ export default function Transactions() {
 
       <div className="bg-crypto-bg-secondary rounded-xl border border-crypto-border overflow-hidden">
         {isLoading ? (
-          <div className="p-8 text-center">
-            <div className="w-8 h-8 border-2 border-crypto-accent border-t-transparent rounded-full animate-spin mx-auto" />
+          <div className="divide-y divide-crypto-border">
+            {[...Array(10)].map((_, i) => (
+              <div key={i} className="px-6 py-4 flex items-center justify-between">
+                <div className="flex gap-4 items-center">
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-4 w-12" />
+                </div>
+                <div className="flex gap-8 items-center">
+                  <Skeleton className="h-4 w-16" />
+                  <Skeleton className="h-4 w-16" />
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-6 w-20 rounded" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : isError ? (
+          <div className="p-12 text-center">
+            <p className="text-crypto-loss mb-4">Failed to load transactions</p>
+            <button 
+              onClick={() => window.location.reload()}
+              className="btn btn-primary"
+            >
+              Try Again
+            </button>
           </div>
         ) : !transactions?.length ? (
           <div className="p-8 text-center text-crypto-text-muted">

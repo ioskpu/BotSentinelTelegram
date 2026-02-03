@@ -1,4 +1,4 @@
-import api from '@/config/api'
+import api, { endpoints } from '@/config/api'
 import { Price, PriceHistory, DashboardStats } from '@/types'
 
 export interface MarketOverview {
@@ -21,33 +21,33 @@ export interface TopMover {
 
 export const metricsService = {
   async getMarketOverview(): Promise<MarketOverview> {
-    const response = await api.get('/v1/metrics/market/overview')
+    const response = await api.get(endpoints.metrics.marketOverview)
     return response.data
   },
 
   async getTopMovers(type: 'gainers' | 'losers' | 'volume' = 'gainers', limit = 10): Promise<TopMover[]> {
-    const response = await api.get('/v1/metrics/market/top-movers', {
+    const response = await api.get(endpoints.metrics.topMovers, {
       params: { sort: type, limit }
     })
     return response.data
   },
 
   async getPriceHistory(coinId: string, days = 7): Promise<PriceHistory> {
-    const response = await api.get(`/v1/metrics/prices/history/${coinId}`, {
+    const response = await api.get(endpoints.prices.history(coinId), {
       params: { days }
     })
     return response.data
   },
 
   async getCurrentPrices(symbols?: string[]): Promise<Price[]> {
-    const response = await api.get('/v1/prices/current', {
-      params: symbols ? { symbols: symbols.join(',') } : undefined
+    const response = await api.get(endpoints.prices.list, {
+      params: symbols ? { coins: symbols.join(',') } : undefined
     })
     return response.data
   },
 
   async getDashboardStats(): Promise<DashboardStats> {
-    const response = await api.get('/v1/dashboard/stats')
+    const response = await api.get(endpoints.dashboard.stats)
     return response.data
   },
 
@@ -59,7 +59,7 @@ export const metricsService = {
     byType: Record<string, number>
     byCoin: { coin: string; count: number }[]
   }> {
-    const response = await api.get('/v1/metrics/alerts')
+    const response = await api.get(endpoints.metrics.alerts)
     return response.data
   },
 
@@ -70,7 +70,7 @@ export const metricsService = {
     pnlPercentage: number
     allocation: { coinId: string; symbol: string; value: number; percentage: number }[]
   }> {
-    const response = await api.get('/v1/metrics/portfolio')
+    const response = await api.get(endpoints.metrics.portfolio)
     return response.data
   },
 }

@@ -1,28 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import api from '@/config/api'
-
-interface Transaction {
-  id: string
-  type: 'buy' | 'sell' | 'transfer_in' | 'transfer_out'
-  symbol: string
-  amount: number
-  price: number
-  total: number
-  timestamp: string
-  status: 'completed' | 'pending' | 'failed'
-  hash?: string
-}
+import { transactionService, Transaction } from '@/services/transaction.service'
+import { Skeleton } from '@/components/ui/Skeleton'
 
 export default function RecentTransactions() {
-  const { data: transactions, isLoading } = useQuery({
+  const { data: transactions, isLoading, isError } = useQuery({
     queryKey: ['recentTransactions'],
-    queryFn: async () => {
-      const response = await api.get('/v1/metrics/transactions', {
-        params: { limit: 5 }
-      })
-      return response.data.transactions as Transaction[]
-    },
+    queryFn: () => transactionService.getRecentTransactions(5),
+    refetchInterval: 300000, // Sync cada 5 minutos
   })
 
   const getTypeConfig = (type: Transaction['type']) => {
@@ -74,8 +59,32 @@ export default function RecentTransactions() {
       </div>
 
       {isLoading ? (
-        <div className="flex items-center justify-center py-8">
-          <div className="w-8 h-8 border-2 border-crypto-accent border-t-transparent rounded-full animate-spin" />
+        <div className="space-y-3">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-crypto-bg-tertiary/20">
+              <div className="flex items-center gap-3">
+                <Skeleton className="w-10 h-10 rounded-full" />
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-3 w-16" />
+                </div>
+              </div>
+              <div className="space-y-2 text-right">
+                <Skeleton className="h-4 w-20 ml-auto" />
+                <Skeleton className="h-3 w-16 ml-auto" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : isError ? (
+        <div className="text-center py-8">
+          <p className="text-crypto-loss text-sm mb-2">Failed to load transactions</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="text-crypto-accent hover:underline text-xs"
+          >
+            Try again
+          </button>
         </div>
       ) : displayTransactions.length === 0 ? (
         <div className="text-center py-8 text-crypto-text-muted">

@@ -17,6 +17,7 @@ class AlertService:
         self.stellar_monitor = StellarMonitor()
         self.solana_monitor = SolanaMonitor()
         self.last_prices: Dict[str, float] = {}
+        self.last_volumes: Dict[str, float] = {}
         self.is_running = False
         self.bot = bot
         self.alert_cooldown: Dict[str, datetime] = {}
@@ -155,6 +156,7 @@ class AlertService:
         try:
             triggered = False
             message = ""
+            coin_id = alert['coin_id']
             
             if alert['alert_type'] == 'price_above':
                 if current_price > alert['threshold']:
@@ -167,8 +169,6 @@ class AlertService:
                     message = f"📉 *{alert['coin_symbol']}* ha caído por debajo de ${alert['threshold']}!\nPrecio actual: ${current_price:,.4f}"
             
             elif alert['alert_type'] == 'percent_change' and (last_price or force_check):
-                # Si es force_check y no hay last_price, usamos el precio de cuando se creó la alerta si estuviera disponible, 
-                # pero por ahora mantenemos la lógica de comparación si hay last_price.
                 if last_price:
                     change_percent = ((current_price - last_price) / last_price) * 100
                     if abs(change_percent) >= alert['threshold']:
@@ -178,6 +178,24 @@ class AlertService:
                             f"📊 *{alert['coin_symbol']}* ha {direction} {abs(change_percent):.2f}%!\n"
                             f"De ${last_price:,.4f} a ${current_price:,.4f}"
                         )
+            
+            elif alert['alert_type'] == 'volume_spike':
+                current_volume = self.price_monitor.volume_cache.get(coin_id)
+                last_volume = self.last_volumes.get(coin_id)
+                
+                if current_volume and last_volume:
+                    volume_increase = current_volume / last_volume
+                    if volume_increase >= alert['threshold']:
+                        triggered = True
+                        message = (
+                            f"🔊 *Aumento de Volumen en {alert['coin_symbol']}*!\n"
+                            f"El volumen ha aumentado {volume_increase:.2f} veces.\n"
+                            f"Volumen actual (24h): ${current_volume:,.0f}"
+                        )
+                
+                # Actualizar volumen para la próxima verificación
+                if current_volume:
+                    self.last_volumes[coin_id] = current_volume
             
             if triggered:
                 await self._trigger_alert(alert, message)

@@ -44,6 +44,7 @@ class PortfolioEntry(BaseModel):
 class Alert(BaseModel):
     id: Optional[PyObjectId] = Field(default_factory=PyObjectId, alias="_id")
     user_id: PyObjectId
+    user_telegram_id: Optional[int] = None
     coin_id: str  # 'solana', 'stellar', etc.
     coin_symbol: str  # 'SOL', 'XLM', etc.
     alert_type: str  # 'price_above', 'price_below', 'percent_change'

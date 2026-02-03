@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useWebSocket } from '@/context/WebSocketContext'
+import { Skeleton } from '@/components/ui/Skeleton'
 
 interface FeedEvent {
   id: string
@@ -17,6 +18,13 @@ export default function LiveFeed() {
   const { subscribe, isConnected } = useWebSocket()
   const [events, setEvents] = useState<FeedEvent[]>([])
   const [isPaused, setIsPaused] = useState(false)
+  const [isInitialLoading, setIsInitialLoading] = useState(true)
+
+  useEffect(() => {
+    // Initial loading simulation
+    const timer = setTimeout(() => setIsInitialLoading(false), 1000)
+    return () => clearTimeout(timer)
+  }, [])
 
   useEffect(() => {
     // Subscribe to various events
@@ -155,7 +163,21 @@ export default function LiveFeed() {
       </div>
 
       <div className="flex-1 overflow-y-auto space-y-3 min-h-0">
-        {events.length === 0 ? (
+        {isInitialLoading ? (
+          <div className="space-y-3">
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="p-3 rounded-lg bg-crypto-bg-tertiary/30 border-l-2 border-crypto-border">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-1/2 rounded" />
+                    <Skeleton className="h-3 w-3/4 rounded" />
+                  </div>
+                  <Skeleton className="h-4 w-12 rounded" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : events.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-crypto-text-muted">
             <svg className="w-12 h-12 mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />

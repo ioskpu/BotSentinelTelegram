@@ -1,26 +1,49 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { useAlerts } from '../../hooks/useAlerts'
-import { CreateAlertRequest, Alert } from '../../types'
+import { Alert } from '../../types'
 
 interface CreateAlertFormProps {
   onClose: () => void
 }
 
-const alertTypes: { value: Alert['type']; label: string; description: string }[] = [
+const alertTypes: { value: Alert['alert_type']; label: string; description: string }[] = [
   { value: 'price_above', label: 'Price Above', description: 'Notify when price goes above target' },
   { value: 'price_below', label: 'Price Below', description: 'Notify when price drops below target' },
   { value: 'percent_change', label: 'Percent Change', description: 'Notify on percentage change' },
-  { value: 'volume_spike', label: 'Volume Spike', description: 'Notify on unusual volume' },
+  { value: 'volume_spike', label: 'Volume Spike', description: 'Notify on volume surge (e.g. 2x average)' },
 ]
 
-const popularSymbols = ['BTC', 'ETH', 'SOL', 'BNB', 'XRP', 'ADA', 'DOGE', 'AVAX']
+const coinMap: Record<string, { id: string; symbol: string }> = {
+  SOL: { id: 'solana', symbol: 'SOL' },
+  XLM: { id: 'stellar', symbol: 'XLM' },
+  BTC: { id: 'bitcoin', symbol: 'BTC' },
+  ETH: { id: 'ethereum', symbol: 'ETH' },
+  ADA: { id: 'cardano', symbol: 'ADA' },
+  DOT: { id: 'polkadot', symbol: 'DOT' },
+  AVAX: { id: 'avalanche-2', symbol: 'AVAX' },
+  MATIC: { id: 'matic-network', symbol: 'MATIC' },
+  ATOM: { id: 'cosmos', symbol: 'ATOM' },
+  ALGO: { id: 'algorand', symbol: 'ALGO' },
+  DOGE: { id: 'dogecoin', symbol: 'DOGE' },
+  SHIB: { id: 'shiba-inu', symbol: 'SHIB' },
+  PEPE: { id: 'pepe', symbol: 'PEPE' },
+  UNI: { id: 'uniswap', symbol: 'UNI' },
+  LINK: { id: 'chainlink', symbol: 'LINK' },
+  AAVE: { id: 'aave', symbol: 'AAVE' },
+  XRP: { id: 'ripple', symbol: 'XRP' },
+  LTC: { id: 'litecoin', symbol: 'LTC' },
+  BNB: { id: 'binancecoin', symbol: 'BNB' },
+  ACU: { id: 'acurast', symbol: 'ACU' },
+}
+
+const popularSymbols = Object.keys(coinMap)
 
 export default function CreateAlertForm({ onClose }: CreateAlertFormProps) {
   const { createAlert, isCreating } = useAlerts()
-  const [formData, setFormData] = useState<CreateAlertRequest>({
+  const [formData, setFormData] = useState({
     symbol: '',
-    type: 'price_above',
-    targetValue: 0,
+    type: 'price_above' as Alert['alert_type'],
+    threshold: 0,
   })
   const [error, setError] = useState('')
 
@@ -28,20 +51,23 @@ export default function CreateAlertForm({ onClose }: CreateAlertFormProps) {
     e.preventDefault()
     setError('')
 
-    if (!formData.symbol.trim()) {
-      setError('Please enter a symbol')
+    const coin = coinMap[formData.symbol.toUpperCase()]
+    if (!coin) {
+      setError('Please select a supported coin')
       return
     }
 
-    if (formData.targetValue <= 0) {
+    if (formData.threshold <= 0) {
       setError('Please enter a valid target value')
       return
     }
 
     try {
       await createAlert({
-        ...formData,
-        symbol: formData.symbol.toUpperCase(),
+        coin_id: coin.id,
+        coin_symbol: coin.symbol,
+        alert_type: formData.type,
+        threshold: formData.threshold,
       })
       onClose()
     } catch (err) {
@@ -75,7 +101,7 @@ export default function CreateAlertForm({ onClose }: CreateAlertFormProps) {
               className="input font-mono"
             />
             <div className="flex flex-wrap gap-2 mt-2">
-              {popularSymbols.map((symbol) => (
+              {popularSymbols.slice(0, 10).map((symbol) => (
                 <button
                   key={symbol}
                   type="button"
@@ -109,7 +135,7 @@ export default function CreateAlertForm({ onClose }: CreateAlertFormProps) {
                     name="alertType"
                     value={type.value}
                     checked={formData.type === type.value}
-                    onChange={(e) => setFormData({ ...formData, type: e.target.value as Alert['type'] })}
+                    onChange={(e) => setFormData({ ...formData, type: e.target.value as Alert['alert_type'] })}
                     className="mt-1"
                   />
                   <div>
@@ -123,14 +149,24 @@ export default function CreateAlertForm({ onClose }: CreateAlertFormProps) {
 
           <div>
             <label className="label">
-              {formData.type === 'percent_change' ? 'Percentage (%)' : 'Target Price ($)'}
+              {formData.type === 'percent_change' ? 'Percentage (%)' : 
+               formData.type === 'volume_spike' ? 'Multiplier (e.g. 2)' : 
+               'Target Price ($)'}
             </label>
             <input
               type="number"
-              value={formData.targetValue || ''}
-              onChange={(e) => setFormData({ ...formData, targetValue: parseFloat(e.target.value) || 0 })}
-              placeholder={formData.type === 'percent_change' ? '5' : '50000'}
-              step={formData.type === 'percent_change' ? '0.1' : '0.01'}
+              value={formData.threshold || ''}
+              onChange={(e) => setFormData({ ...formData, threshold: parseFloat(e.target.value) || 0 })}
+              placeholder={
+                formData.type === 'percent_change' ? '5' : 
+                formData.type === 'volume_spike' ? '2' : 
+                '50000'
+              }
+              step={
+                formData.type === 'percent_change' ? '0.1' : 
+                formData.type === 'volume_spike' ? '0.5' : 
+                '0.01'
+              }
               className="input font-mono"
             />
           </div>

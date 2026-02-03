@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAlerts } from '@/hooks/useAlerts'
-import { Alert } from '@/types'
 import { alertsService } from '@/services/alerts.service'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { Skeleton } from '@/components/ui/Skeleton'
+import { toast } from '@/store/toastStore'
 
 export default function AlertsPanel() {
   const { alerts, isLoading } = useAlerts({ pageSize: 10 })
@@ -11,26 +12,34 @@ export default function AlertsPanel() {
   const queryClient = useQueryClient()
 
   const toggleMutation = useMutation({
-    mutationFn: alertsService.toggleAlert,
-    onSuccess: () => {
+    mutationFn: (id: string) => alertsService.toggleAlert(id),
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['alerts'] })
+      toast.success(`Alert ${data.is_active ? 'activated' : 'paused'} successfully`)
     },
+    onError: () => {
+      toast.error('Failed to update alert status')
+    }
   })
 
   const deleteMutation = useMutation({
-    mutationFn: alertsService.deleteAlert,
+    mutationFn: (id: string) => alertsService.deleteAlert(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['alerts'] })
+      toast.success('Alert deleted successfully')
     },
+    onError: () => {
+      toast.error('Failed to delete alert')
+    }
   })
 
   const filteredAlerts = alerts.filter(alert => {
-    if (filter === 'active') return alert.isActive && !alert.isTriggered
-    if (filter === 'triggered') return alert.isTriggered
+    if (filter === 'active') return alert.is_active && !alert.triggered_at
+    if (filter === 'triggered') return !!alert.triggered_at
     return true
   })
 
-  const getAlertTypeIcon = (type: Alert['type']) => {
+  const getAlertTypeIcon = (type: string) => {
     switch (type) {
       case 'price_above':
         return <span className="text-crypto-gain">↑</span>
@@ -45,7 +54,7 @@ export default function AlertsPanel() {
     }
   }
 
-  const getAlertTypeLabel = (type: Alert['type']) => {
+  const getAlertTypeLabel = (type: string) => {
     switch (type) {
       case 'price_above': return 'Above'
       case 'price_below': return 'Below'
@@ -85,8 +94,19 @@ export default function AlertsPanel() {
       </div>
 
       {isLoading ? (
-        <div className="flex items-center justify-center py-8">
-          <div className="w-8 h-8 border-2 border-crypto-accent border-t-transparent rounded-full animate-spin" />
+        <div className="space-y-3">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="flex items-center justify-between p-3 border border-crypto-bg-tertiary rounded-lg">
+              <div className="flex items-center gap-3">
+                <Skeleton className="w-8 h-8 rounded-full" />
+                <div>
+                  <Skeleton className="w-20 h-4 mb-2" />
+                  <Skeleton className="w-32 h-3" />
+                </div>
+              </div>
+              <Skeleton className="w-16 h-8 rounded-md" />
+            </div>
+          ))}
         </div>
       ) : filteredAlerts.length === 0 ? (
         <div className="text-center py-8 text-crypto-text-muted">
@@ -106,7 +126,6 @@ export default function AlertsPanel() {
                 <th className="table-header pb-3">Coin</th>
                 <th className="table-header pb-3">Type</th>
                 <th className="table-header pb-3 text-right">Target</th>
-                <th className="table-header pb-3 text-right">Current</th>
                 <th className="table-header pb-3 text-center">Status</th>
                 <th className="table-header pb-3 text-right">Actions</th>
               </tr>
@@ -117,29 +136,26 @@ export default function AlertsPanel() {
                   <td className="table-cell">
                     <div className="flex items-center gap-2">
                       <div className="w-8 h-8 rounded-full bg-crypto-bg-tertiary flex items-center justify-center font-mono font-bold text-xs text-crypto-accent">
-                        {alert.symbol.slice(0, 3)}
+                        {alert.coin_symbol.slice(0, 3)}
                       </div>
-                      <span className="font-medium">{alert.symbol}</span>
+                      <span className="font-medium">{alert.coin_symbol}</span>
                     </div>
                   </td>
                   <td className="table-cell">
                     <div className="flex items-center gap-1">
-                      {getAlertTypeIcon(alert.type)}
+                      {getAlertTypeIcon(alert.alert_type)}
                       <span className="text-crypto-text-secondary text-sm">
-                        {getAlertTypeLabel(alert.type)}
+                        {getAlertTypeLabel(alert.alert_type)}
                       </span>
                     </div>
                   </td>
                   <td className="table-cell text-right font-mono">
-                    ${alert.targetValue.toLocaleString()}
-                  </td>
-                  <td className="table-cell text-right font-mono text-crypto-text-secondary">
-                    {alert.currentValue ? `$${alert.currentValue.toLocaleString()}` : '-'}
+                    ${alert.threshold.toLocaleString()}
                   </td>
                   <td className="table-cell text-center">
-                    {alert.isTriggered ? (
+                    {alert.triggered_at ? (
                       <span className="badge-gain">Triggered</span>
-                    ) : alert.isActive ? (
+                    ) : alert.is_active ? (
                       <span className="badge-neutral">Active</span>
                     ) : (
                       <span className="badge bg-crypto-text-muted/20 text-crypto-text-muted">Paused</span>
@@ -151,9 +167,9 @@ export default function AlertsPanel() {
                         onClick={() => toggleMutation.mutate(alert.id)}
                         disabled={toggleMutation.isPending}
                         className="p-1.5 rounded hover:bg-crypto-bg-tertiary transition-colors"
-                        title={alert.isActive ? 'Pause' : 'Resume'}
+                        title={alert.is_active ? 'Pause' : 'Resume'}
                       >
-                        {alert.isActive ? (
+                        {alert.is_active ? (
                           <svg className="w-4 h-4 text-crypto-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>

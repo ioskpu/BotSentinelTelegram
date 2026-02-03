@@ -52,21 +52,21 @@ async def login_with_telegram(auth_data: TelegramAuthData, request: Request):
         "last_login": now,
     }
     
-    existing_user = await mongodb.db.web_users.find_one({"telegram_id": auth_data.id})
+    existing_user = await mongodb.users.find_one({"telegram_id": auth_data.id})
     if existing_user:
-        await mongodb.db.web_users.update_one(
+        await mongodb.users.update_one(
             {"telegram_id": auth_data.id},
             {"$set": user_data}
         )
     else:
         user_data["created_at"] = now
-        await mongodb.db.web_users.insert_one(user_data)
+        await mongodb.users.insert_one(user_data)
     
     token_data = {"telegram_id": auth_data.id}
     access_token = create_access_token(token_data)
     refresh_token = create_refresh_token(token_data)
     
-    await mongodb.db.sessions.update_many(
+    await mongodb.sessions.update_many(
         {"user_telegram_id": auth_data.id},
         {"$set": {"is_active": False}}
     )
@@ -82,9 +82,9 @@ async def login_with_telegram(auth_data: TelegramAuthData, request: Request):
         "user_agent": request.headers.get("user-agent"),
         "ip_address": request.client.host if request.client else None,
     }
-    await mongodb.db.sessions.insert_one(session_data)
+    await mongodb.sessions.insert_one(session_data)
     
-    await mongodb.db.activity_logs.insert_one({
+    await mongodb.activity_logs.insert_one({
         "user_telegram_id": auth_data.id,
         "action": "login",
         "details": {"method": "telegram_widget"},
@@ -105,7 +105,7 @@ async def refresh_access_token(refresh_request: RefreshTokenRequest):
     payload = verify_token(refresh_request.refresh_token, token_type="refresh")
     telegram_id = payload.get("telegram_id")
     
-    session = await mongodb.db.sessions.find_one({
+    session = await mongodb.sessions.find_one({
         "user_telegram_id": telegram_id,
         "refresh_token": refresh_request.refresh_token,
         "is_active": True,
@@ -122,7 +122,7 @@ async def refresh_access_token(refresh_request: RefreshTokenRequest):
     new_refresh_token = create_refresh_token(token_data)
     
     now = datetime.utcnow()
-    await mongodb.db.sessions.update_one(
+    await mongodb.sessions.update_one(
         {"_id": session["_id"]},
         {
             "$set": {
@@ -143,12 +143,12 @@ async def refresh_access_token(refresh_request: RefreshTokenRequest):
 
 @router.post("/logout", response_model=LogoutResponse)
 async def logout(current_user: dict = Depends(get_current_user)):
-    await mongodb.db.sessions.update_many(
+    await mongodb.sessions.update_many(
         {"user_telegram_id": current_user["telegram_id"]},
         {"$set": {"is_active": False}}
     )
     
-    await mongodb.db.activity_logs.insert_one({
+    await mongodb.activity_logs.insert_one({
         "user_telegram_id": current_user["telegram_id"],
         "action": "logout",
         "created_at": datetime.utcnow(),

@@ -40,7 +40,7 @@ export const alertsService = {
   },
 
   async getAlertStats(): Promise<{ total: number; active: number; triggered: number }> {
-    const response = await api.get(`${endpoints.alerts.list}/stats`)
+    const response = await api.get(endpoints.alerts.stats)
     return response.data
   },
 }

@@ -5,8 +5,8 @@ import { useAlerts } from '../hooks/useAlerts'
 export default function Alerts() {
   const { alerts, total } = useAlerts({ pageSize: 100 })
 
-  const activeCount = alerts.filter((a) => a.isActive && !a.isTriggered).length
-  const triggeredCount = alerts.filter((a) => a.isTriggered).length
+  const activeCount = alerts.filter((a) => a.is_active && !a.triggered_at).length
+  const triggeredCount = alerts.filter((a) => !!a.triggered_at).length
 
   return (
     <div className="space-y-6">

@@ -1,15 +1,16 @@
 import { useQuery } from '@tanstack/react-query'
 import api, { endpoints } from '../config/api'
-import { Portfolio as PortfolioType, ApiResponse } from '../types'
+import { Portfolio as PortfolioType } from '../types'
 import PriceChart from '../components/charts/PriceChart'
 
 export default function Portfolio() {
-  const { data: portfolio, isLoading } = useQuery({
+  const { data: portfolio, isLoading, isError } = useQuery({
     queryKey: ['portfolio'],
     queryFn: async () => {
-      const response = await api.get<ApiResponse<PortfolioType>>(endpoints.portfolio.get)
-      return response.data.data
+      const response = await api.get<PortfolioType>(endpoints.portfolio.get)
+      return response.data
     },
+    refetchInterval: 300000, // Sync every 5 minutes
   })
 
   if (isLoading) {
@@ -26,6 +27,20 @@ export default function Portfolio() {
             </div>
           ))}
         </div>
+      </div>
+    )
+  }
+
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20">
+        <p className="text-crypto-loss mb-4">Failed to load portfolio data</p>
+        <button 
+          onClick={() => window.location.reload()}
+          className="btn btn-primary"
+        >
+          Try Again
+        </button>
       </div>
     )
   }

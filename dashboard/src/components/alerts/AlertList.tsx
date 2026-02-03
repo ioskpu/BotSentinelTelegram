@@ -18,8 +18,8 @@ export default function AlertList({ showCreateButton = true, limit }: AlertListP
   })
 
   const filteredAlerts = alerts.filter((alert) => {
-    if (filter === 'active') return alert.isActive && !alert.isTriggered
-    if (filter === 'triggered') return alert.isTriggered
+    if (filter === 'active') return alert.is_active && !alert.triggered_at
+    if (filter === 'triggered') return !!alert.triggered_at
     return true
   })
 

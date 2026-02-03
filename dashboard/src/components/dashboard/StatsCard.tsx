@@ -1,3 +1,5 @@
+import { Skeleton } from '@/components/ui/Skeleton'
+
 interface StatsCardProps {
   title: string
   value: string | number
@@ -5,6 +7,7 @@ interface StatsCardProps {
   changeLabel?: string
   icon: React.ReactNode
   trend?: 'up' | 'down' | 'neutral'
+  isLoading?: boolean
 }
 
 export default function StatsCard({
@@ -14,6 +17,7 @@ export default function StatsCard({
   changeLabel,
   icon,
   trend = 'neutral',
+  isLoading = false,
 }: StatsCardProps) {
   const trendColors = {
     up: 'text-crypto-gain',
@@ -30,19 +34,28 @@ export default function StatsCard({
   return (
     <div className="card">
       <div className="flex items-start justify-between">
-        <div>
+        <div className="flex-1">
           <p className="stat-label">{title}</p>
-          <p className="stat-value mt-1">{value}</p>
-          {change !== undefined && (
-            <div className="flex items-center gap-1 mt-2">
-              <span className={trendColors[trend]}>
-                {trend === 'up' && '+'}
-                {typeof change === 'number' ? change.toFixed(2) : change}%
-              </span>
-              {changeLabel && (
-                <span className="text-xs text-crypto-text-muted">{changeLabel}</span>
-              )}
+          {isLoading ? (
+            <div className="mt-2 space-y-2">
+              <Skeleton className="h-8 w-24" />
+              <Skeleton className="h-4 w-16" />
             </div>
+          ) : (
+            <>
+              <p className="stat-value mt-1">{value}</p>
+              {change !== undefined && (
+                <div className="flex items-center gap-1 mt-2">
+                  <span className={trendColors[trend]}>
+                    {trend === 'up' && '+'}
+                    {typeof change === 'number' ? change.toFixed(2) : change}%
+                  </span>
+                  {changeLabel && (
+                    <span className="text-xs text-crypto-text-muted">{changeLabel}</span>
+                  )}
+                </div>
+              )}
+            </>
           )}
         </div>
         <div className={`p-3 rounded-lg ${trendBgColors[trend]}`}>

@@ -56,7 +56,7 @@ async def enrich_position_with_prices(position: dict, prices: dict) -> Portfolio
 @router.get("", response_model=PortfolioSummary)
 async def get_portfolio(current_user: dict = Depends(get_current_user)):
     cursor = mongodb.portfolio.find({
-        "user_telegram_id": current_user["telegram_id"]
+        "user_id": current_user["_id"]
     }).sort("created_at", -1)
     
     positions = await cursor.to_list(length=100)
@@ -71,7 +71,7 @@ async def get_portfolio(current_user: dict = Depends(get_current_user)):
             positions=[],
         )
     
-    coin_ids = list(set(p["coin_id"] for p in positions if p["coin_id"] in SUPPORTED_COINS))
+    coin_ids = list(set(p["coin_id"] for p in positions if p.get("coin_id") in SUPPORTED_COINS))
     
     prices = {}
     if coin_ids:
@@ -115,6 +115,7 @@ async def create_position(
 ):
     now = datetime.utcnow()
     position_doc = {
+        "user_id": current_user["_id"],
         "user_telegram_id": current_user["telegram_id"],
         "coin_id": position_data.coin_id.lower(),
         "coin_symbol": position_data.coin_symbol.upper(),
@@ -130,7 +131,8 @@ async def create_position(
     result = await mongodb.portfolio.insert_one(position_doc)
     position_doc["_id"] = result.inserted_id
     
-    await mongodb.db.activity_logs.insert_one({
+    await mongodb.activity_logs.insert_one({
+        "user_id": current_user["_id"],
         "user_telegram_id": current_user["telegram_id"],
         "action": "position_created",
         "details": {
@@ -166,7 +168,7 @@ async def update_position(
     
     position = await mongodb.portfolio.find_one({
         "_id": ObjectId(position_id),
-        "user_telegram_id": current_user["telegram_id"],
+        "user_id": current_user["_id"],
     })
     
     if not position:
@@ -186,7 +188,7 @@ async def update_position(
     updated_position = await mongodb.portfolio.find_one({"_id": ObjectId(position_id)})
     
     prices = {}
-    if updated_position["coin_id"] in SUPPORTED_COINS:
+    if updated_position.get("coin_id") in SUPPORTED_COINS:
         try:
             prices = await fetch_coingecko_prices([updated_position["coin_id"]])
         except:
@@ -208,7 +210,7 @@ async def delete_position(
     
     result = await mongodb.portfolio.delete_one({
         "_id": ObjectId(position_id),
-        "user_telegram_id": current_user["telegram_id"],
+        "user_id": current_user["_id"],
     })
     
     if result.deleted_count == 0:
@@ -217,7 +219,8 @@ async def delete_position(
             detail="Position not found",
         )
     
-    await mongodb.db.activity_logs.insert_one({
+    await mongodb.activity_logs.insert_one({
+        "user_id": current_user["_id"],
         "user_telegram_id": current_user["telegram_id"],
         "action": "position_deleted",
         "details": {"position_id": position_id},

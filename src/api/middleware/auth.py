@@ -79,7 +79,7 @@ async def get_current_user(
             detail="Invalid token payload",
         )
     
-    session = await mongodb.db.sessions.find_one({
+    session = await mongodb.sessions.find_one({
         "user_telegram_id": telegram_id,
         "is_active": True,
     })
@@ -90,19 +90,20 @@ async def get_current_user(
             detail="Session not found or expired",
         )
     
-    user = await mongodb.db.web_users.find_one({"telegram_id": telegram_id})
+    user = await mongodb.users.find_one({"telegram_id": telegram_id})
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User not found",
         )
     
-    await mongodb.db.sessions.update_one(
+    await mongodb.sessions.update_one(
         {"_id": session["_id"]},
         {"$set": {"last_activity": datetime.utcnow()}}
     )
     
     return {
+        "_id": user["_id"],
         "telegram_id": user["telegram_id"],
         "username": user.get("username"),
         "first_name": user.get("first_name"),
