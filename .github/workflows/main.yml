@@ -20,7 +20,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pytest pytest-asyncio
+          pip install pytest pytest-asyncio pytest-xprocess
       - name: Run backend tests
         run: |
           export PYTHONPATH=$PYTHONPATH:$(pwd)
