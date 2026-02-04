@@ -29,8 +29,26 @@ export default function Settings() {
   const { data: settings, isLoading } = useQuery({
     queryKey: ['settings'],
     queryFn: async () => {
-      const response = await api.get<ApiResponse<UserSettings>>(endpoints.user.settings)
-      return response.data.data
+      const response = await api.get(endpoints.user.settings)
+      const data = response.data
+      
+      // Map Backend UserProfileResponse to Frontend UserSettings
+      return {
+        notifications: {
+          email: data.notification_preferences?.email || false,
+          telegram: data.notification_preferences?.telegram || true,
+          push: data.notification_preferences?.push || true,
+        },
+        alertDefaults: {
+          autoDisableOnTrigger: true,
+          repeatInterval: null,
+        },
+        display: {
+          currency: 'USD',
+          timezone: data.timezone || 'UTC',
+          theme: data.theme || 'dark',
+        },
+      } as UserSettings
     },
   })
 
@@ -44,8 +62,21 @@ export default function Settings() {
 
   const updateMutation = useMutation({
     mutationFn: async (data: UserSettings) => {
-      const response = await api.put<ApiResponse<UserSettings>>(endpoints.user.updateSettings, data)
-      return response.data.data
+      // Map Frontend UserSettings back to Backend UserProfileUpdate
+      const backendData = {
+        timezone: data.display.timezone,
+        theme: data.display.theme,
+        notification_preferences: {
+          email: data.notifications.email,
+          telegram: data.notifications.telegram,
+          push: data.notifications.push,
+          price_alerts: true, // defaults
+          whale_alerts: true,
+          portfolio_updates: true,
+        }
+      }
+      const response = await api.put(endpoints.user.updateSettings, backendData)
+      return response.data
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['settings'] })

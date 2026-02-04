@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { useEffect, useState, useCallback } from 'react'
-import wsService from '../config/websocket'
+import { wsService } from '../services/websocket.service'
 import { Price, WebSocketMessage } from '../types'
 import { metricsService } from '../services/metrics.service'
 
@@ -29,7 +29,7 @@ export function usePrices(symbols?: string[]) {
   }, [initialPrices])
 
   useEffect(() => {
-    const handlePriceUpdate = (message: WebSocketMessage) => {
+    const handlePriceUpdate = (message: any) => {
       const priceUpdate = message.data as Price
       // Convert to snake_case if coming from WS
       const formattedPrice: Price = {
@@ -100,7 +100,7 @@ export function usePrice(symbol: string) {
   useEffect(() => {
     if (!symbol) return
 
-    const handlePriceUpdate = (message: WebSocketMessage) => {
+    const handlePriceUpdate = (message: any) => {
       const priceUpdate = message.data as Price
       if (priceUpdate.symbol === symbol) {
         // Convert to snake_case

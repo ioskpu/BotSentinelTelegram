@@ -2,7 +2,7 @@ import { Outlet } from 'react-router-dom'
 import { useEffect } from 'react'
 import Sidebar from './Sidebar'
 import Header from './Header'
-import wsService from '../../config/websocket'
+import { wsService } from '../../services/websocket.service'
 import { useAuthStore } from '../../store/authStore'
 
 export default function Layout() {

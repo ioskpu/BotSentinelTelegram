@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useEffect } from 'react'
 import { useAlertStore } from '../store/alertStore'
-import wsService from '../config/websocket'
+import { wsService } from '../services/websocket.service'
 import { Alert, CreateAlertRequest } from '../types'
 import { toast } from '../store/toastStore'
 import { alertsService } from '../services/alerts.service'
@@ -80,7 +80,7 @@ export function useAlerts(options: UseAlertsOptions = {}) {
   })
 
   useEffect(() => {
-    const unsubscribe = wsService.subscribe('alert_triggered', (message) => {
+    const unsubscribe = wsService.subscribe('alert_triggered', (message: any) => {
       const alert = message.data as Alert
       addTriggeredAlert(alert)
       toast.info(`Alert triggered: ${alert.coin_symbol} ${alert.alert_type}`, 5000)

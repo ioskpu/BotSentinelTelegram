@@ -1,6 +1,7 @@
 import { useAuthStore } from '@/store/authStore'
+import { WebSocketMessage } from '@/types'
 
-type MessageHandler = (data: unknown) => void
+export type MessageHandler = (data: any) => void
 
 class WebSocketService {
   private socket: WebSocket | null = null
@@ -37,12 +38,19 @@ class WebSocketService {
       this.reconnectAttempts = 0
       this.authenticate()
       this.startHeartbeat()
+      
+      this.notifyHandlers('connection', {
+        type: 'connection',
+        data: { status: 'connected' },
+        timestamp: new Date().toISOString(),
+      })
     }
 
     this.socket.onmessage = (event) => {
       try {
-        const data = JSON.parse(event.data)
-        this.handleMessage(data)
+        const message = JSON.parse(event.data)
+        // Backend usually sends {type, data} or just the object
+        this.handleMessage(message)
       } catch (error) {
         console.error('Error parsing WebSocket message:', error)
       }
@@ -51,11 +59,21 @@ class WebSocketService {
     this.socket.onclose = (event) => {
       console.log('WebSocket closed:', event.reason)
       this.stopHeartbeat()
+      this.notifyHandlers('connection', {
+        type: 'connection',
+        data: { status: 'disconnected', reason: event.reason },
+        timestamp: new Date().toISOString(),
+      })
       this.scheduleReconnect()
     }
 
     this.socket.onerror = (error) => {
       console.error('WebSocket error:', error)
+      this.notifyHandlers('error', {
+        type: 'error',
+        data: { error },
+        timestamp: new Date().toISOString(),
+      })
     }
   }
 
@@ -130,14 +148,39 @@ class WebSocketService {
   }
 
   private notifyHandlers(event: string, data: unknown): void {
-    this.handlers.get(event)?.forEach(handler => handler(data))
-    this.handlers.get('*')?.forEach(handler => handler({ event, data }))
+    const handlers = this.handlers.get(event)
+    if (handlers) {
+      handlers.forEach(handler => handler(data))
+    }
+    
+    const wildcardHandlers = this.handlers.get('*')
+    if (wildcardHandlers) {
+      wildcardHandlers.forEach(handler => handler({ event, data }))
+    }
+    
+    // Compatibility for Header.tsx and other connection status listeners
+    if (event === 'connection') {
+      const connData = data as any
+      if (connData.status === 'connected') {
+        this.handlers.get('connect')?.forEach(h => h(data))
+      } else if (connData.status === 'disconnected') {
+        this.handlers.get('disconnect')?.forEach(h => h(data))
+      }
+    }
   }
 
   emit(type: string, data?: any): void {
     if (this.socket?.readyState === WebSocket.OPEN) {
       this.socket.send(JSON.stringify({ type, ...data }))
     }
+  }
+
+  subscribeToPrices(symbols: string[]): void {
+    this.emit('subscribe_prices', { symbols })
+  }
+
+  unsubscribeFromPrices(symbols: string[]): void {
+    this.emit('unsubscribe_prices', { symbols })
   }
 
   isConnected(): boolean {

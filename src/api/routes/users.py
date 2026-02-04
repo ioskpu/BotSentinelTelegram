@@ -122,6 +122,21 @@ async def update_user_profile(
     return await get_user_profile(current_user)
 
 
+@router.get("/settings", response_model=UserProfileResponse)
+async def get_user_settings(current_user: dict = Depends(get_current_user)):
+    # Reusing profile for now as it contains preferences
+    return await get_user_profile(current_user)
+
+
+@router.put("/settings", response_model=UserProfileResponse)
+async def update_user_settings(
+    profile_update: UserProfileUpdate,
+    current_user: dict = Depends(get_current_user),
+):
+    # Reusing profile update for now
+    return await update_user_profile(profile_update, current_user)
+
+
 @router.get("/stats", response_model=UserStatsResponse)
 async def get_user_stats(current_user: dict = Depends(get_current_user)):
     user = await mongodb.users.find_one(
