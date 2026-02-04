@@ -11,11 +11,15 @@ El orquestador principal que gestiona:
 - Ejecución en segundo plano del `AlertService`.
 - Lanzamiento del servidor web FastAPI.
 
-### 2. Capa de API y Monitoreo (`src/api/`)
-Implementado con **FastAPI**, proporciona:
-- **Health Checks**: Endpoints para que Fly.io verifique que la app está viva.
-- **Monitoreo Externo**: `/api/v1/health` verifica la conectividad con MongoDB y APIs externas.
-- **Escalabilidad**: Base para un futuro Dashboard administrativo.
+### 2. Capa de API y Dashboard (`src/api/` & `dashboard/`)
+- **FastAPI Backend**: 
+  - Proporciona endpoints REST para autenticación, gestión de alertas, portafolio y métricas.
+  - Implementa **WebSockets** para la transmisión de precios en tiempo real y feeds de actividad.
+  - Gestiona la integración con el Bot de Telegram para notificaciones cruzadas.
+- **React Frontend (Dashboard)**:
+  - Interfaz de usuario moderna construida con Vite y TypeScript.
+  - Consumo de datos en tiempo real mediante un servicio centralizado de WebSockets con reconexión automática.
+  - Gestión de estado eficiente con Zustand y sincronización de datos con TanStack Query.
 
 ### 3. Bot de Telegram (`src/bot/`)
 - **Polling Mode**: Recibe comandos en tiempo real.

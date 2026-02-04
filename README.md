@@ -32,13 +32,19 @@ El proyecto ha entrado en su **Fase 3**, integrando capacidades avanzadas de Web
 
 ## 🖥️ Dashboard Web
 
-El proyecto incluye un dashboard web completo para gestionar tu cuenta de forma visual:
+El proyecto incluye un dashboard web completo para gestionar tu cuenta de forma visual. Puedes consultar la [Guía de Usuario del Dashboard](docs/dashboard_user_guide.md) para más detalles.
 
-### Características
-- **Métricas de Mercado**: Resumen global de Market Cap, Dominancia de BTC y Volúmenes.
-- **Gestión de Alertas**: Crea, edita y visualiza tus alertas de precio activas.
-- **Visualización de Portafolio**: Gráficos y tablas detalladas de tus posiciones y P&L.
-- **Actividad en Vivo**: Feed de transacciones y alertas disparadas en tiempo real vía WebSockets.
+### Características Principales
+- **Métricas de Mercado en Tiempo Real**: Resumen global de Market Cap, Dominancia de BTC y precios en vivo vía WebSockets.
+- **Gestión de Alertas**: Interfaz visual para crear, editar y monitorear alertas de precio (sincronizado con Telegram).
+- **Análisis de Portafolio**: Gráficos detallados de tus posiciones, distribución de activos y cálculo de P&L.
+- **Feed de Actividad Blockchain**: Visualización en vivo de transacciones en cuentas monitoreadas (Stellar/Solana).
+- **Personalización**: Soporte para modo oscuro/claro y configuración de preferencias de notificación.
+
+### Tecnologías
+- **Frontend**: React 18, Vite, TypeScript, Tailwind CSS, TanStack Query.
+- **Estado Global**: Zustand para una gestión de estado ligera y eficiente.
+- **Comunicación**: WebSockets para datos en tiempo real y Axios para API REST.
 
 ### Ejecución y Desarrollo
 ```bash
@@ -47,7 +53,7 @@ cd dashboard
 npm install
 npm run dev
 
-# Backend (API)
+# Backend (API & Bot)
 python src/main.py
 ```
 
