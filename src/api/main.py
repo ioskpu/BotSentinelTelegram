@@ -30,6 +30,7 @@ def create_app():
         "http://127.0.0.1:5173",
         "https://crypto-sentinel-bot.vercel.app", # Final production URL
         "https://crypto-sentinel-dashboard.vercel.app", # Alternative URL
+        "https://bot-sentinel-telegram.vercel.app", # Current user domain
     ]
     # Add production URLs from environment if available
     import os
@@ -45,11 +46,10 @@ def create_app():
     
     # Allow all vercel previews in production
     if os.getenv("ENVIRONMENT") == "production":
-        # Note: In a real production app, you might want to be more restrictive
-        # but for this project, allowing vercel previews is helpful
+        # Allow both crypto-sentinel and bot-sentinel domains
         app.add_middleware(
             CORSMiddleware,
-            allow_origin_regex=r"https://crypto-sentinel-.*\.vercel\.app",
+            allow_origin_regex=r"https://(crypto-sentinel|bot-sentinel)-.*\.vercel\.app",
             allow_credentials=True,
             allow_methods=["*"],
             allow_headers=["*"],

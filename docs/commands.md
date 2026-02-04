@@ -1,16 +1,14 @@
-src/components/charts/AlertsChart.tsx(39,38): error TS2339: Property 'symbol' does not exist on type 'Alert'.
-src/components/layout/Header.tsx(86,79): error TS2339: Property 'symbol' does not exist on type 'Alert'.
-src/components/layout/Header.tsx(87,64): error TS2339: Property 'type' does not exist on type 'Alert'.
-src/components/layout/Header.tsx(90,32): error TS2339: Property 'message' does not exist on type 'Alert'.
-src/components/layout/Header.tsx(90,61): error TS2339: Property 'targetValue' does not exist on type 'Alert'.
-src/components/layout/Header.tsx(93,41): error TS2551: Property 'triggeredAt' does not exist on type 'Alert'. Did you mean 'triggered_at'?
-src/components/layout/Header.tsx(93,62): error TS2339: Property 'updatedAt' does not exist on type 'Alert'.
-src/components/layout/Header.tsx(109,22): error TS2551: Property 'photoUrl' does not exist on type 'User'. Did you mean 'photo_url'?
-src/components/layout/Header.tsx(110,32): error TS2551: Property 'photoUrl' does not exist on type 'User'. Did you mean 'photo_url'?
-src/components/layout/Header.tsx(113,26): error TS2551: Property 'firstName' does not exist on type 'User'. Did you mean 'first_name'?
-src/components/layout/Header.tsx(118,57): error TS2551: Property 'firstName' does not exist on type 'User'. Did you mean 'first_name'?
-src/components/layout/Header.tsx(120,24): error TS2551: Property 'isPremium' does not exist on type 'User'. Did you mean 'is_premium'?
-src/components/ui/ToastContainer.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
-src/config/websocket.ts(79,19): error TS6133: 'data' is declared but its value is never read.
-src/context/WebSocketContext.tsx(17,13): error TS7030: Not all code paths return a value.
-Error: Command "npm run build" exited with 2
+lockdown-install.js:1 SES Removing unpermitted intrinsics
+lockdown-install.js:1 SES Removing unpermitted intrinsics
+instrument.c11b3b43a747b2d370be.js?dpl=dpl_KRpWmRDE2fD4v5QUr1xt4vdDAVqm?dpl=dpl_KRpWmRDE2fD4v5QUr1xt4vdDAVqm:2 [DEPRECATED] Default export is deprecated. Instead use `import { create } from 'zustand'`.
+f @ instrument.c11b3b43a747b2d370be.js?dpl=dpl_KRpWmRDE2fD4v5QUr1xt4vdDAVqm?dpl=dpl_KRpWmRDE2fD4v5QUr1xt4vdDAVqm:2
+instrument.c11b3b43a747b2d370be.js?dpl=dpl_KRpWmRDE2fD4v5QUr1xt4vdDAVqm?dpl=dpl_KRpWmRDE2fD4v5QUr1xt4vdDAVqm:2 [DEPRECATED] Default export is deprecated. Instead use `import { create } from 'zustand'`.
+f @ instrument.c11b3b43a747b2d370be.js?dpl=dpl_KRpWmRDE2fD4v5QUr1xt4vdDAVqm?dpl=dpl_KRpWmRDE2fD4v5QUr1xt4vdDAVqm:2
+login:1 Access to XMLHttpRequest at 'https://crypto-sentinel-bot.fly.dev/api/v1/dashboard/auth/telegram' from origin 'https://bot-sentinel-telegram.vercel.app' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+installHook.js:1 Login error: AxiosError: Network Error
+    at w.onerror (xhr.js:112:20)
+    at Wn.request (Axios.js:45:41)
+    at async Object.loginWithTelegram (auth.service.ts:22:22)
+overrideMethod @ installHook.js:1
+crypto-sentinel-bot.fly.dev/api/v1/dashboard/auth/telegram:1  Failed to load resource: net::ERR_FAILED
+lockdown-install.js:1 SES Removing unpermitted intrinsics

@@ -31,6 +31,7 @@ export default function Login() {
 
     window.TelegramLoginWidget = {
       dataOnauth: (user: TelegramUser) => {
+        console.log('Telegram auth received:', user)
         login(user)
       },
     }

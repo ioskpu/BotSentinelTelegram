@@ -31,11 +31,16 @@ export function useAuth() {
   const loginMutation = useMutation({
     mutationFn: (authData: TelegramAuthData) => authService.loginWithTelegram(authData),
     onSuccess: async (data) => {
+      console.log('Login mutation success, received data:', { ...data, access_token: '***' })
       // After login, we have the token, now fetch the user profile
       try {
-        // We set the token first so the getCurrentUser call can use it
-        // Or we pass it explicitly if the interceptor isn't ready yet
+        // IMPORTANT: We MUST set the token first so subsequent requests (like getCurrentUser)
+        // will include the Authorization header via the axios interceptor
+        useAuthStore.getState().setToken(data.access_token)
+        
+        console.log('Fetching user profile...')
         const userProfile = await authService.getCurrentUser()
+        console.log('User profile fetched:', userProfile)
         
         setAuth(userProfile, data.access_token)
         wsService.connect()
@@ -45,6 +50,8 @@ export function useAuth() {
       } catch (error) {
         console.error('Error fetching user after login:', error)
         toast.error('Failed to fetch user profile')
+        // If we fail to get the profile, we should probably logout to be safe
+        storeLogout()
       }
     },
     onError: (error) => {
