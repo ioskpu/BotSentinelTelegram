@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import api, { endpoints } from '../config/api'
 import { useAuth } from '../hooks/useAuth'
-import { ApiResponse } from '../types'
 
 interface UserSettings {
   notifications: {

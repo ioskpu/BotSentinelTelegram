@@ -1,5 +1,4 @@
 import { useAuthStore } from '@/store/authStore'
-import { WebSocketMessage } from '@/types'
 
 export type MessageHandler = (data: any) => void
 

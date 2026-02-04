@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useEffect, useState, useCallback } from 'react'
 import { wsService } from '../services/websocket.service'
-import { Price, WebSocketMessage } from '../types'
+import { Price } from '../types'
 import { metricsService } from '../services/metrics.service'
 
 export function usePrices(symbols?: string[]) {
