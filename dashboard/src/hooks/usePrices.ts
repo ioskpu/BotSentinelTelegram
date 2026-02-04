@@ -31,9 +31,15 @@ export function usePrices(symbols?: string[]) {
   useEffect(() => {
     const handlePriceUpdate = (message: WebSocketMessage) => {
       const priceUpdate = message.data as Price
+      // Convert to snake_case if coming from WS
+      const formattedPrice: Price = {
+        ...priceUpdate,
+        current_price: priceUpdate.current_price || (priceUpdate as any).price,
+        price_change_percentage_24h: priceUpdate.price_change_percentage_24h || (priceUpdate as any).change_percent_24h
+      }
       setRealtimePrices((prev) => {
         const newMap = new Map(prev)
-        newMap.set(priceUpdate.symbol, priceUpdate)
+        newMap.set(formattedPrice.symbol, formattedPrice)
         return newMap
       })
     }
@@ -97,7 +103,13 @@ export function usePrice(symbol: string) {
     const handlePriceUpdate = (message: WebSocketMessage) => {
       const priceUpdate = message.data as Price
       if (priceUpdate.symbol === symbol) {
-        setRealtimePrice(priceUpdate)
+        // Convert to snake_case
+        const formattedPrice: Price = {
+          ...priceUpdate,
+          current_price: priceUpdate.current_price || (priceUpdate as any).price,
+          price_change_percentage_24h: priceUpdate.price_change_percentage_24h || (priceUpdate as any).change_percent_24h
+        }
+        setRealtimePrice(formattedPrice)
       }
     }
 

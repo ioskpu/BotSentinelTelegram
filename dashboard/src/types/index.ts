@@ -29,15 +29,14 @@ export interface CreateAlertRequest {
 }
 
 export interface Price {
+  coin_id: string;
   symbol: string;
   name: string;
-  price: number;
-  change_24h: number;
-  change_percent_24h: number;
-  volume_24h: number;
-  market_cap: number;
-  high_24h: number;
-  low_24h: number;
+  current_price: number;
+  price_change_24h?: number;
+  price_change_percentage_24h?: number;
+  volume_24h?: number;
+  market_cap?: number;
   last_updated: string;
   sparkline?: number[];
 }

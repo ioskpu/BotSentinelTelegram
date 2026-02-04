@@ -17,7 +17,18 @@ class WebSocketService {
     }
 
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-    const wsUrl = import.meta.env.VITE_WS_URL || `${protocol}//${window.location.host}/ws/dashboard`
+    let wsUrl = import.meta.env.VITE_WS_URL
+    
+    if (!wsUrl) {
+      const apiUrl = import.meta.env.VITE_API_URL
+      if (apiUrl && apiUrl.startsWith('http')) {
+        // Derive WS URL from API URL
+        wsUrl = apiUrl.replace(/^http/, 'ws').replace(/\/api\/v1\/dashboard\/?$/, '/ws/dashboard')
+      } else {
+        // Fallback to current host
+        wsUrl = `${protocol}//${window.location.host}/ws/dashboard`
+      }
+    }
     
     console.log('Connecting to WebSocket:', wsUrl)
     this.socket = new WebSocket(wsUrl)

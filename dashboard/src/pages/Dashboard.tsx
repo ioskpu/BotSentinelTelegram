@@ -65,7 +65,7 @@ export default function Dashboard() {
         <h3 className="text-lg font-semibold mb-4">Market Overview</h3>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
           {prices
-            .sort((a, b) => b.change_percent_24h - a.change_percent_24h)
+            .sort((a, b) => (b.price_change_percentage_24h || 0) - (a.price_change_percentage_24h || 0))
             .map((price) => (
               <div
                 key={price.symbol}
@@ -82,12 +82,12 @@ export default function Dashboard() {
                 </div>
                 <div className="flex items-end justify-between">
                   <p className="font-mono font-bold text-lg">
-                    ${price.price.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                    ${(price.current_price || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}
                   </p>
                   <p className={`text-sm font-medium ${
-                    price.change_percent_24h >= 0 ? 'text-crypto-gain' : 'text-crypto-loss'
+                    (price.price_change_percentage_24h || 0) >= 0 ? 'text-crypto-gain' : 'text-crypto-loss'
                   }`}>
-                    {price.change_percent_24h >= 0 ? '+' : ''}{price.change_percent_24h.toFixed(2)}%
+                    {(price.price_change_percentage_24h || 0) >= 0 ? '+' : ''}{(price.price_change_percentage_24h || 0).toFixed(2)}%
                   </p>
                 </div>
                 {/* Mini sparkline placeholder */}
@@ -96,7 +96,7 @@ export default function Dashboard() {
                     <div
                       key={i}
                       className={`flex-1 rounded-t ${
-                        price.change_percent_24h >= 0 ? 'bg-crypto-gain/40' : 'bg-crypto-loss/40'
+                        (price.price_change_percentage_24h || 0) >= 0 ? 'bg-crypto-gain/40' : 'bg-crypto-loss/40'
                       }`}
                       style={{ height: `${(v as number) * 100}%` }}
                     />
