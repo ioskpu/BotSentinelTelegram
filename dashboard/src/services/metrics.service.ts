@@ -1,5 +1,5 @@
 import api, { endpoints } from '@/config/api'
-import { Price, PriceHistory, DashboardStats } from '@/types'
+import { Price, PriceHistory } from '@/types'
 
 export interface MarketOverview {
   total_market_cap: number
@@ -43,11 +43,6 @@ export const metricsService = {
     const response = await api.get(endpoints.prices.list, {
       params: symbols ? { coins: symbols.join(',') } : undefined
     })
-    return response.data
-  },
-
-  async getDashboardStats(): Promise<DashboardStats> {
-    const response = await api.get(endpoints.dashboard.stats)
     return response.data
   },
 

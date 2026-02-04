@@ -106,7 +106,7 @@ export default function Portfolio() {
                 </thead>
                 <tbody>
                   {portfolio.holdings.map((holding) => {
-                    const holdingPositive = holding.profitLossPercent >= 0
+                    const holdingPositive = holding.profit_loss_percent >= 0
                     return (
                       <tr key={holding.symbol} className="border-b border-crypto-border hover:bg-crypto-bg-tertiary transition-colors">
                         <td className="table-cell">
@@ -127,7 +127,7 @@ export default function Portfolio() {
                           ${holding.value.toLocaleString()}
                         </td>
                         <td className={`table-cell text-right font-mono ${holdingPositive ? 'text-crypto-gain' : 'text-crypto-loss'}`}>
-                          {holdingPositive ? '+' : ''}{holding.profitLossPercent.toFixed(2)}%
+                          {holdingPositive ? '+' : ''}{holding.profit_loss_percent.toFixed(2)}%
                         </td>
                         <td className="table-cell text-right">
                           <div className="flex items-center justify-end gap-2">

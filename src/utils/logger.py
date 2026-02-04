@@ -38,13 +38,11 @@ def setup_logging(level: str = "INFO", json_format: bool = False):
     logger.remove()
     
     if json_format:
-        # Formato JSON para producción
-        formatter = JSONFormatter()
+        # Formato JSON para producción usando serialize=True de Loguru
         logger.add(
             sys.stdout,
-            format=formatter.format,
-            level=level,
-            serialize=False
+            serialize=True,
+            level=level
         )
     else:
         # Formato legible para desarrollo

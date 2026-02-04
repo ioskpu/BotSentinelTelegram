@@ -83,14 +83,14 @@ export default function Header() {
                       className="p-4 border-b border-crypto-border hover:bg-crypto-bg-tertiary transition-colors"
                     >
                       <div className="flex items-center gap-2">
-                        <span className="font-mono text-crypto-accent">{alert.symbol}</span>
-                        <span className="badge-neutral">{alert.type}</span>
+                        <span className="font-mono text-crypto-accent">{alert.coin_symbol}</span>
+                        <span className="badge-neutral">{alert.alert_type}</span>
                       </div>
                       <p className="text-sm text-crypto-text-secondary mt-1">
-                        {alert.message || `Target: $${alert.targetValue.toLocaleString()}`}
+                        {alert.message || `Target: $${alert.threshold.toLocaleString()}`}
                       </p>
                       <p className="text-xs text-crypto-text-muted mt-1">
-                        {new Date(alert.triggeredAt || alert.updatedAt).toLocaleString()}
+                        {new Date(alert.triggered_at || alert.created_at).toLocaleString()}
                       </p>
                     </div>
                   ))
@@ -106,18 +106,18 @@ export default function Header() {
             className="flex items-center gap-3 p-2 rounded-lg hover:bg-crypto-bg-tertiary transition-colors"
           >
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-crypto-accent to-crypto-gain flex items-center justify-center">
-              {user?.photoUrl ? (
-                <img src={user.photoUrl} alt={user.username} className="w-8 h-8 rounded-full" />
+              {user?.photo_url ? (
+                <img src={user.photo_url} alt={user.username} className="w-8 h-8 rounded-full" />
               ) : (
                 <span className="text-sm font-bold text-crypto-bg">
-                  {user?.firstName?.[0] || user?.username?.[0] || 'U'}
+                  {user?.first_name?.[0] || user?.username?.[0] || 'U'}
                 </span>
               )}
             </div>
             <div className="text-left hidden sm:block">
-              <p className="text-sm font-medium">{user?.firstName || user?.username}</p>
+              <p className="text-sm font-medium">{user?.first_name || user?.username}</p>
               <p className="text-xs text-crypto-text-muted">
-                {user?.isPremium ? 'Premium' : 'Free'}
+                {user?.is_premium ? 'Premium' : 'Free'}
               </p>
             </div>
           </button>

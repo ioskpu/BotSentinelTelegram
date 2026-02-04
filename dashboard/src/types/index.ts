@@ -18,6 +18,7 @@ export interface Alert {
   is_active: boolean
   created_at: string
   triggered_at?: string
+  message?: string
 }
 
 export interface CreateAlertRequest {
@@ -28,76 +29,76 @@ export interface CreateAlertRequest {
 }
 
 export interface Price {
-  symbol: string
-  name: string
-  price: number
-  change24h: number
-  changePercent24h: number
-  volume24h: number
-  marketCap: number
-  high24h: number
-  low24h: number
-  lastUpdated: string
-  sparkline?: number[]
+  symbol: string;
+  name: string;
+  price: number;
+  change_24h: number;
+  change_percent_24h: number;
+  volume_24h: number;
+  market_cap: number;
+  high_24h: number;
+  low_24h: number;
+  last_updated: string;
+  sparkline?: number[];
 }
 
 export interface PriceHistory {
-  symbol: string
+  symbol: string;
   prices: {
-    timestamp: string
-    price: number
-    volume: number
-  }[]
-  timeframe: '1h' | '24h' | '7d' | '30d' | '1y'
+    timestamp: string;
+    price: number;
+    volume: number;
+  }[];
+  timeframe: '1h' | '24h' | '7d' | '30d' | '1y';
 }
 
 export interface Portfolio {
-  id: string
-  coin_id: string
-  coin_symbol: string
-  coin_name: string
-  amount: number
-  buy_price?: number
-  buy_date?: string
-  notes?: string
-  current_price?: number
-  current_value?: number
-  profit_loss?: number
-  profit_loss_percent?: number
-  created_at: string
-  updated_at: string
+  id: string;
+  coin_id: string;
+  coin_symbol: string;
+  coin_name: string;
+  amount: number;
+  buy_price?: number;
+  buy_date?: string;
+  notes?: string;
+  current_price?: number;
+  current_value?: number;
+  profit_loss?: number;
+  profit_loss_percent?: number;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface PortfolioSummary {
-  total_value: number
-  total_invested: number
-  total_profit_loss: number
-  total_profit_loss_percent: number
-  positions_count: number
-  positions: Portfolio[]
-  holdings?: PortfolioHolding[]
+  total_value: number;
+  total_invested: number;
+  total_profit_loss: number;
+  total_profit_loss_percent: number;
+  positions_count: number;
+  positions: Portfolio[];
+  holdings?: PortfolioHolding[];
 }
 
 export interface CreatePositionRequest {
-  coin_id: string
-  coin_symbol: string
-  coin_name: string
-  amount: number
-  buy_price?: number
-  buy_date?: string
-  notes?: string
+  coin_id: string;
+  coin_symbol: string;
+  coin_name: string;
+  amount: number;
+  buy_price?: number;
+  buy_date?: string;
+  notes?: string;
 }
 
 export interface PortfolioHolding {
-  symbol: string
-  name: string
-  amount: number
-  avgBuyPrice: number
-  currentPrice: number
-  value: number
-  profitLoss: number
-  profitLossPercent: number
-  allocation: number
+  symbol: string;
+  name: string;
+  amount: number;
+  avg_buy_price: number;
+  current_price: number;
+  value: number;
+  profit_loss: number;
+  profit_loss_percent: number;
+  allocation: number;
 }
 
 export interface Activity {
@@ -108,23 +109,6 @@ export interface Activity {
   symbol?: string
   value?: number
   timestamp: string
-}
-
-export interface DashboardStats {
-  totalAlerts: number
-  activeAlerts: number
-  triggeredToday: number
-  portfolioValue: number
-  portfolioChange24h: number
-  portfolioChangePercent24h: number
-  topGainer: {
-    symbol: string
-    changePercent: number
-  }
-  topLoser: {
-    symbol: string
-    changePercent: number
-  }
 }
 
 export interface WebSocketMessage {

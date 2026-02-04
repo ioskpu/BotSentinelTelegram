@@ -27,6 +27,7 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
         wsService.disconnect()
       }
     }
+    return undefined
   }, [isAuthenticated])
 
   const subscribe = useCallback((event: string, handler: (data: unknown) => void) => {

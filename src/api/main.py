@@ -28,21 +28,39 @@ def create_app():
         "http://localhost:5173",
         "http://127.0.0.1:3000",
         "http://127.0.0.1:5173",
-        "https://arterial-authigenic-aleshia.ngrok-free.dev",
+        "https://crypto-sentinel-bot.vercel.app", # Final production URL
+        "https://crypto-sentinel-dashboard.vercel.app", # Alternative URL
     ]
     # Add production URLs from environment if available
     import os
-    if os.getenv("DASHBOARD_URL"):
-        allowed_origins.append(os.getenv("DASHBOARD_URL"))
+    dashboard_url = os.getenv("DASHBOARD_URL")
+    if dashboard_url:
+        allowed_origins.append(dashboard_url)
+        # Also allow the .vercel.app variant if it's a custom domain
+        if ".vercel.app" not in dashboard_url and "localhost" not in dashboard_url:
+            allowed_origins.append(f"https://{dashboard_url.split('//')[-1].split('.')[0]}.vercel.app")
+    
     if os.getenv("CORS_ORIGINS"):
         allowed_origins.extend(os.getenv("CORS_ORIGINS", "").split(","))
+    
+    # Allow all vercel previews in production
+    if os.getenv("ENVIRONMENT") == "production":
+        # Note: In a real production app, you might want to be more restrictive
+        # but for this project, allowing vercel previews is helpful
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origin_regex=r"https://crypto-sentinel-.*\.vercel\.app",
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
     
     app.add_middleware(
         CORSMiddleware,
         allow_origins=allowed_origins,
         allow_credentials=True,
         allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-        allow_headers=["Authorization", "Content-Type", "X-Requested-With"],
+        allow_headers=["Authorization", "Content-Type", "X-Requested-With", "Accept"],
     )
     
     # Include routers

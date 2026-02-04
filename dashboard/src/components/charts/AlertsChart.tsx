@@ -24,7 +24,7 @@ const COLORS = ['#00d9ff', '#00ff88', '#ff4757', '#ffa502', '#a55eea']
 export default function AlertsChart({ alerts, type = 'bar', height = 250 }: AlertsChartProps) {
   const alertsByType = useMemo(() => {
     const grouped = alerts.reduce((acc, alert) => {
-      acc[alert.type] = (acc[alert.type] || 0) + 1
+      acc[alert.alert_type] = (acc[alert.alert_type] || 0) + 1
       return acc
     }, {} as Record<string, number>)
 
@@ -36,7 +36,7 @@ export default function AlertsChart({ alerts, type = 'bar', height = 250 }: Aler
 
   const alertsBySymbol = useMemo(() => {
     const grouped = alerts.reduce((acc, alert) => {
-      acc[alert.symbol] = (acc[alert.symbol] || 0) + 1
+      acc[alert.coin_symbol] = (acc[alert.coin_symbol] || 0) + 1
       return acc
     }, {} as Record<string, number>)
 

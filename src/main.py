@@ -69,18 +69,15 @@ class CryptoApp:
             logger.error(f"Error creando índices: {e}")
     
     async def start_web_server(self):
-        """Inicia el servidor web en segundo plano"""
+        """Inicia el servidor web"""
         config = uvicorn.Config(
             web_app,
             host="0.0.0.0",
-            port=8080,
+            port=int(os.getenv("PORT", 8080)),
             log_level="info"
         )
         self.web_server = uvicorn.Server(config)
-        
-        # Ejecutar en segundo plano
-        loop = asyncio.get_event_loop()
-        await loop.create_task(self.web_server.serve())
+        await self.web_server.serve()
     
     async def run(self):
         """Ejecuta la aplicación principal"""
@@ -91,18 +88,16 @@ class CryptoApp:
         for sig in (signal.SIGINT, signal.SIGTERM):
             loop.add_signal_handler(sig, lambda: asyncio.create_task(self.shutdown()))
         
-        # Iniciar servidor web en segundo plano
+        # Iniciar servicios
+        logger.info("Starting all services...")
+        
+        # Crear tareas para todos los servicios
         web_task = asyncio.create_task(self.start_web_server())
-        
-        # Esperar un momento para que el servidor web inicie
-        await asyncio.sleep(2)
-        
-        # Iniciar servicios del bot
         bot_task = asyncio.create_task(self.telegram_bot.start_polling())
         alert_task = asyncio.create_task(self.alert_service.start())
         
         try:
-            # Esperar a que terminen las tareas
+            # Esperar a que terminen las tareas (o alguna falle)
             await asyncio.gather(web_task, bot_task, alert_task)
         except asyncio.CancelledError:
             logger.info("Aplicación cancelada")

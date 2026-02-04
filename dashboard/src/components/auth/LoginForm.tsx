@@ -1,15 +1,11 @@
 import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
-import { authService } from '@/services/auth.service'
-import { useAuthStore } from '@/store/authStore'
+import { Link } from 'react-router-dom'
 
 interface FormErrors {
   general?: string
 }
 
 export default function LoginForm() {
-  const navigate = useNavigate()
-  const { setAuth } = useAuthStore()
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<FormErrors>({})
 
@@ -23,21 +19,6 @@ export default function LoginForm() {
       window.location.href = `https://t.me/${botUsername}?start=login`
     } catch (error) {
       setErrors({ general: 'Failed to initiate Telegram login' })
-      setIsLoading(false)
-    }
-  }
-
-  // Handle callback from Telegram (would be called after redirect)
-  const handleTelegramCallback = async (telegramData: unknown) => {
-    setIsLoading(true)
-    try {
-      const response = await authService.loginWithTelegram(telegramData as Parameters<typeof authService.loginWithTelegram>[0])
-      const user = await authService.getCurrentUser()
-      setAuth(user, response.access_token)
-      navigate('/')
-    } catch (error) {
-      setErrors({ general: 'Authentication failed. Please try again.' })
-    } finally {
       setIsLoading(false)
     }
   }

@@ -1,4 +1,3 @@
-import React from 'react'
 import { useToastStore, ToastType } from '../../store/toastStore'
 
 const typeStyles: Record<ToastType, string> = {

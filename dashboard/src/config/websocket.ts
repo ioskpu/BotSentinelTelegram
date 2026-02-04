@@ -76,13 +76,11 @@ class WebSocketService {
   }
 
   private handleMessage(message: any): void {
-    const { type, data } = message
-    
-    if (type === 'auth_success') {
+    if (message.type === 'auth_success') {
       console.log('WebSocket authenticated successfully')
     }
     
-    this.notifyHandlers(type, message)
+    this.notifyHandlers(message.type, message)
   }
 
   private scheduleReconnect(): void {

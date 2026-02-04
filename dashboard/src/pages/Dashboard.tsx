@@ -65,7 +65,7 @@ export default function Dashboard() {
         <h3 className="text-lg font-semibold mb-4">Market Overview</h3>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
           {prices
-            .sort((a, b) => b.changePercent24h - a.changePercent24h)
+            .sort((a, b) => b.change_percent_24h - a.change_percent_24h)
             .map((price) => (
               <div
                 key={price.symbol}
@@ -85,9 +85,9 @@ export default function Dashboard() {
                     ${price.price.toLocaleString(undefined, { maximumFractionDigits: 2 })}
                   </p>
                   <p className={`text-sm font-medium ${
-                    price.changePercent24h >= 0 ? 'text-crypto-gain' : 'text-crypto-loss'
+                    price.change_percent_24h >= 0 ? 'text-crypto-gain' : 'text-crypto-loss'
                   }`}>
-                    {price.changePercent24h >= 0 ? '+' : ''}{price.changePercent24h.toFixed(2)}%
+                    {price.change_percent_24h >= 0 ? '+' : ''}{price.change_percent_24h.toFixed(2)}%
                   </p>
                 </div>
                 {/* Mini sparkline placeholder */}
@@ -96,7 +96,7 @@ export default function Dashboard() {
                     <div
                       key={i}
                       className={`flex-1 rounded-t ${
-                        price.changePercent24h >= 0 ? 'bg-crypto-gain/40' : 'bg-crypto-loss/40'
+                        price.change_percent_24h >= 0 ? 'bg-crypto-gain/40' : 'bg-crypto-loss/40'
                       }`}
                       style={{ height: `${(v as number) * 100}%` }}
                     />

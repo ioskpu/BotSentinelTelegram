@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom'
 
 export default function RegisterForm() {
   const [isLoading, setIsLoading] = useState(false)
-  const [step, setStep] = useState<'initial' | 'pending'>('initial')
 
   const handleTelegramRegister = () => {
     setIsLoading(true)
