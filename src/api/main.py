@@ -28,39 +28,27 @@ def create_app():
         "http://localhost:5173",
         "http://127.0.0.1:3000",
         "http://127.0.0.1:5173",
-        "https://crypto-sentinel-bot.vercel.app", # Final production URL
-        "https://crypto-sentinel-dashboard.vercel.app", # Alternative URL
-        "https://bot-sentinel-telegram.vercel.app", # Current user domain
+        "https://crypto-sentinel-bot.vercel.app",
+        "https://crypto-sentinel-dashboard.vercel.app",
+        "https://bot-sentinel-telegram.vercel.app",
     ]
-    # Add production URLs from environment if available
+    
     import os
     dashboard_url = os.getenv("DASHBOARD_URL")
     if dashboard_url:
         allowed_origins.append(dashboard_url)
-        # Also allow the .vercel.app variant if it's a custom domain
-        if ".vercel.app" not in dashboard_url and "localhost" not in dashboard_url:
-            allowed_origins.append(f"https://{dashboard_url.split('//')[-1].split('.')[0]}.vercel.app")
     
     if os.getenv("CORS_ORIGINS"):
         allowed_origins.extend(os.getenv("CORS_ORIGINS", "").split(","))
     
-    # Allow all vercel previews in production
-    if os.getenv("ENVIRONMENT") == "production":
-        # Allow both crypto-sentinel and bot-sentinel domains
-        app.add_middleware(
-            CORSMiddleware,
-            allow_origin_regex=r"https://(crypto-sentinel|bot-sentinel)-.*\.vercel\.app",
-            allow_credentials=True,
-            allow_methods=["*"],
-            allow_headers=["*"],
-        )
-    
+    # Single CORS middleware configuration
     app.add_middleware(
         CORSMiddleware,
         allow_origins=allowed_origins,
+        allow_origin_regex=r"https://.*\.vercel\.app", # Allow all vercel apps for flexibility
         allow_credentials=True,
-        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-        allow_headers=["Authorization", "Content-Type", "X-Requested-With", "Accept"],
+        allow_methods=["*"],
+        allow_headers=["*"],
     )
     
     # Include routers

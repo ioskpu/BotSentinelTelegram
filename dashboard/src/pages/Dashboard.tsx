@@ -3,7 +3,7 @@ import PriceChart from '@/components/charts/PriceChart'
 import { usePrices } from '@/hooks/usePrices'
 
 export default function Dashboard() {
-  const { prices } = usePrices(['BTC', 'ETH', 'SOL', 'BNB', 'AVAX'])
+  const { prices } = usePrices(['bitcoin', 'ethereum', 'solana', 'avalanche-2', 'stellar'])
 
   return (
     <div className="space-y-6 animate-fade-in">

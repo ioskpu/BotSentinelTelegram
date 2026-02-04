@@ -14,7 +14,11 @@ class ConnectionManager:
         self.broadcast_connections: Set[WebSocket] = set()
     
     async def connect(self, websocket: WebSocket, user_id: int | None = None):
-        await websocket.accept()
+        try:
+            await websocket.accept()
+        except Exception as e:
+            logger.error(f"Error accepting WebSocket: {e}")
+            return
         
         if user_id:
             if user_id not in self.active_connections:
@@ -97,9 +101,11 @@ async def websocket_endpoint(websocket: WebSocket):
     user_id = None
     
     try:
-        await websocket.accept()
+        # Accept the connection first
+        await manager.connect(websocket)
         
         try:
+            # Wait for auth message
             auth_message = await asyncio.wait_for(websocket.receive_text(), timeout=10.0)
             auth_data = json.loads(auth_message)
             
@@ -110,6 +116,9 @@ async def websocket_endpoint(websocket: WebSocket):
                     
                     if user_id not in manager.active_connections:
                         manager.active_connections[user_id] = set()
+                    
+                    # Move from broadcast to active
+                    manager.broadcast_connections.discard(websocket)
                     manager.active_connections[user_id].add(websocket)
                     
                     await websocket.send_json({
