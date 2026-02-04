@@ -1,4 +1,3 @@
-import { io, Socket } from 'socket.io-client'
 import { useAuthStore } from '@/store/authStore'
 
 type MessageHandler = (data: unknown) => void
@@ -131,7 +130,7 @@ class WebSocketService {
   }
 
   isConnected(): boolean {
-    return this.socket?.readyState === WebSocket.OPEN ?? false
+    return this.socket?.readyState === WebSocket.OPEN
   }
 }
 

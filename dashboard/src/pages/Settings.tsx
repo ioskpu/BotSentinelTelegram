@@ -107,24 +107,24 @@ export default function Settings() {
         <h3 className="text-lg font-semibold mb-4">Profile</h3>
         <div className="flex items-center gap-4 mb-6">
           <div className="w-16 h-16 rounded-full bg-gradient-to-br from-crypto-accent to-crypto-gain flex items-center justify-center">
-            {user?.photoUrl ? (
-              <img src={user.photoUrl} alt={user.username} className="w-16 h-16 rounded-full" />
+            {user?.photo_url ? (
+              <img src={user.photo_url} alt={user.username} className="w-16 h-16 rounded-full" />
             ) : (
               <span className="text-2xl font-bold text-crypto-bg">
-                {user?.firstName?.[0] || user?.username?.[0] || 'U'}
+                {user?.first_name?.[0] || user?.username?.[0] || 'U'}
               </span>
             )}
           </div>
           <div>
-            <p className="text-lg font-semibold">{user?.firstName} {user?.lastName}</p>
+            <p className="text-lg font-semibold">{user?.first_name} {user?.last_name}</p>
             <p className="text-crypto-text-secondary">@{user?.username}</p>
-            <span className={user?.isPremium ? 'badge-gain' : 'badge-neutral'}>
-              {user?.isPremium ? 'Premium' : 'Free Plan'}
+            <span className={user?.is_premium ? 'badge-gain' : 'badge-neutral'}>
+              {user?.is_premium ? 'Premium' : 'Free Plan'}
             </span>
           </div>
         </div>
         <p className="text-sm text-crypto-text-muted">
-          Connected via Telegram • ID: {user?.telegramId}
+          Connected via Telegram • ID: {user?.telegram_id}
         </p>
       </div>
 

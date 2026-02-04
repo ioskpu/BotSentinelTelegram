@@ -1,13 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
 import api, { endpoints } from '../config/api'
-import { Portfolio as PortfolioType } from '../types'
+import { PortfolioSummary } from '../types'
 import PriceChart from '../components/charts/PriceChart'
 
 export default function Portfolio() {
   const { data: portfolio, isLoading, isError } = useQuery({
     queryKey: ['portfolio'],
     queryFn: async () => {
-      const response = await api.get<PortfolioType>(endpoints.portfolio.get)
+      const response = await api.get<PortfolioSummary>(endpoints.portfolio.get)
       return response.data
     },
     refetchInterval: 300000, // Sync every 5 minutes
@@ -45,7 +45,7 @@ export default function Portfolio() {
     )
   }
 
-  const isPositive = (portfolio?.totalProfitLossPercent ?? 0) >= 0
+  const isPositive = (portfolio?.total_profit_loss_percent ?? 0) >= 0
 
   return (
     <div className="space-y-6">
@@ -62,21 +62,21 @@ export default function Portfolio() {
         <div className="card">
           <p className="stat-label">Total Value</p>
           <p className="stat-value text-2xl">
-            ${(portfolio?.totalValue ?? 0).toLocaleString()}
+            ${(portfolio?.total_value ?? 0).toLocaleString()}
           </p>
         </div>
 
         <div className="card">
           <p className="stat-label">Total P&L</p>
           <p className={`stat-value ${isPositive ? 'text-crypto-gain' : 'text-crypto-loss'}`}>
-            {isPositive ? '+' : ''}${(portfolio?.totalProfitLoss ?? 0).toLocaleString()}
+            {isPositive ? '+' : ''}${(portfolio?.total_profit_loss ?? 0).toLocaleString()}
           </p>
         </div>
 
         <div className="card">
           <p className="stat-label">P&L %</p>
           <p className={`stat-value ${isPositive ? 'text-crypto-gain' : 'text-crypto-loss'}`}>
-            {isPositive ? '+' : ''}{(portfolio?.totalProfitLossPercent ?? 0).toFixed(2)}%
+            {isPositive ? '+' : ''}{(portfolio?.total_profit_loss_percent ?? 0).toFixed(2)}%
           </p>
         </div>
       </div>

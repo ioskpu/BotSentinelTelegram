@@ -6,6 +6,7 @@ export interface User {
   photo_url?: string
   created_at: string
   last_login: string
+  is_premium?: boolean
 }
 
 export interface Alert {
@@ -74,6 +75,7 @@ export interface PortfolioSummary {
   total_profit_loss_percent: number
   positions_count: number
   positions: Portfolio[]
+  holdings?: PortfolioHolding[]
 }
 
 export interface CreatePositionRequest {

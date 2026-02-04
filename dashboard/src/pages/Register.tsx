@@ -1,15 +1,13 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 
 export default function Register() {
-  const navigate = useNavigate()
   const [isLoading, setIsLoading] = useState(false)
 
   const handleTelegramAuth = () => {
     setIsLoading(true)
     // Redirect to Telegram OAuth
     const botUsername = import.meta.env.VITE_TELEGRAM_BOT_USERNAME || 'CryptoSentinelBot'
-    const callbackUrl = `${window.location.origin}/auth/callback`
     window.location.href = `https://t.me/${botUsername}?start=register`
   }
 
