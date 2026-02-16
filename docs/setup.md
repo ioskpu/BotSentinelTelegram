@@ -18,7 +18,7 @@ Crea un archivo `.env` en la raíz del proyecto:
 
 ```bash
 # Telegram (Obtenlo de @BotFather)
-TELEGRAM_BOT_TOKEN=8090803712:AAERXJmZM9euXPVqIkm1WFx_TB3P2ZNOFVc
+TELEGRAM_BOT_TOKEN=your_telegram_bot_token_here
 
 # MongoDB Atlas
 MONGODB_URI=mongodb+srv://usuario:password@cluster.mongodb.net/crypto_bot
